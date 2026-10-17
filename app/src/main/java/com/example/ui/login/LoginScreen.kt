@@ -584,7 +584,14 @@ fun LoginScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // ==========================================
+                    // نموذج 'تواصل معنا' لطلب انضمام جمعية للنظام
+                    // ==========================================
+                    ContactUsJoinSection()
+
+                    Spacer(modifier = Modifier.height(18.dp))
                     Text(
                         text = "نظام سحابي آمن متوافق مع ضوابط الأمن السيبراني للجمعيات",
                         fontSize = 11.sp,
