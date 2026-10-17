@@ -2,6 +2,7 @@ package com.example.data
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.vector.ImageVector
 
 // Tenant (الجمعية / المستأجر)
@@ -245,7 +246,7 @@ data class ExportLogRecord(
 
 // Sample In-Memory Data Repository
 object SocietyRepository {
-    val tenants = listOf(
+    private val initialTenants = listOf(
         // الجمعيات الرائدة المطلوبة
         Tenant(
             id = "t_hsa",
@@ -740,6 +741,51 @@ object SocietyRepository {
             governorate = "ريمة"
         )
     )
+
+    var tenants by mutableStateOf(initialTenants)
+
+    /**
+     * ميزة المطور والإدارة: فحص واعتماد طلب انضمام جمعية جديدة
+     * وإدراجها فوراً ضمن الجمعيات المعتمدة في النظام وتجهيز بيئتها.
+     */
+    fun approveNewSociety(
+        name: String,
+        governorate: String,
+        supervisorName: String,
+        phone: String,
+        email: String,
+        notes: String
+    ): Tenant {
+        val estimatedRings = notes.filter { it.isDigit() }.toIntOrNull()?.coerceIn(1, 500) ?: 15
+        val codePrefix = when {
+            governorate.contains("تعز") -> "TAZ"
+            governorate.contains("صنعاء") -> "SAN"
+            governorate.contains("عدن") -> "ADN"
+            governorate.contains("حضرموت") -> "HAD"
+            governorate.contains("مأرب") -> "MAR"
+            governorate.contains("إب") -> "IBB"
+            governorate.contains("الحديدة") -> "HUD"
+            else -> "YEM"
+        }
+        val randomSuffix = (100..999).random()
+        val approvedTenant = Tenant(
+            id = "t_approved_${System.currentTimeMillis()}",
+            name = name.trim(),
+            shortName = if (name.trim().length > 25) name.trim().take(25) else name.trim(),
+            city = if (governorate.isNotBlank()) governorate.trim() else "اليمن",
+            code = "$codePrefix-$randomSuffix",
+            ringsCount = estimatedRings,
+            studentsCount = estimatedRings * 20,
+            teachersCount = (estimatedRings * 1.2).toInt().coerceAtLeast(3),
+            attendanceRate = 96,
+            unreadMessagesCount = 1,
+            licenseNumber = "LIC-YE-${(1000..9999).random()}",
+            country = "اليمن",
+            governorate = if (governorate.isNotBlank()) governorate.trim() else "اليمن"
+        )
+        tenants = listOf(approvedTenant) + tenants
+        return approvedTenant
+    }
 
     val defaultSupervisor = UserProfile(
         id = "sup_01",

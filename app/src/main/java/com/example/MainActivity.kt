@@ -27,6 +27,7 @@ import com.example.ui.attendance.AttendanceScreen
 import com.example.ui.circles.CircleDetailScreen
 import com.example.ui.dashboard.SupervisorDashboardScreen
 import com.example.ui.login.LoginScreen
+import com.example.ui.navigation.AppNavigationDrawerSheet
 import com.example.ui.parent.ParentPortalScreen
 import com.example.ui.recitation.AudioRecitationScreen
 import com.example.ui.reports.ReportsAndCertificatesScreen
@@ -34,6 +35,7 @@ import com.example.ui.supervisor.SupervisorRegistrationScreen
 import com.example.ui.teacherportal.TeacherPortalScreen
 import com.example.ui.teachers.TeacherManagementScreen
 import com.example.ui.theme.*
+import kotlinx.coroutines.launch
 
 object AppDestinations {
     const val LOGIN = "login"
@@ -78,189 +80,179 @@ fun SocietyApp() {
             currentRoute != AppDestinations.LOGIN &&
             currentRoute != AppDestinations.SUPERVISOR_REGISTRATION
 
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val coroutineScope = rememberCoroutineScope()
+
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-        Scaffold(
-            bottomBar = {
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            drawerContent = {
                 if (showBottomBar) {
-                    NavigationBar(
-                        containerColor = Color.White,
-                        tonalElevation = 8.dp,
-                        modifier = Modifier
-                            .windowInsetsPadding(WindowInsets.navigationBars)
-                            .testTag("app_navigation_bar")
-                    ) {
-                        // لوحة المشرف
-                        NavigationBarItem(
-                            selected = currentRoute == AppDestinations.SUPERVISOR_DASHBOARD,
-                            onClick = {
-                                navController.navigate(AppDestinations.SUPERVISOR_DASHBOARD) {
-                                    popUpTo(AppDestinations.SUPERVISOR_DASHBOARD) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = if (currentRoute == AppDestinations.SUPERVISOR_DASHBOARD) Icons.Default.Dashboard else Icons.Outlined.Dashboard,
-                                    contentDescription = "المشرف"
-                                )
-                            },
-                            label = { Text("المشرف", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = SocietyBluePrimary,
-                                selectedTextColor = SocietyBluePrimary,
-                                indicatorColor = SocietyBlueLight
-                            )
-                        )
-
-                        // إدارة المعلمين
-                        NavigationBarItem(
-                            selected = currentRoute == AppDestinations.TEACHERS,
-                            onClick = {
-                                navController.navigate(AppDestinations.TEACHERS) {
-                                    popUpTo(AppDestinations.SUPERVISOR_DASHBOARD) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = if (currentRoute == AppDestinations.TEACHERS) Icons.Default.School else Icons.Outlined.School,
-                                    contentDescription = "المعلمون"
-                                )
-                            },
-                            label = { Text("المعلمون", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = SocietyBluePrimary,
-                                selectedTextColor = SocietyBluePrimary,
-                                indicatorColor = SocietyBlueLight
-                            )
-                        )
-
-                        // تفاصيل الحلقة
-                        NavigationBarItem(
-                            selected = currentRoute == AppDestinations.CIRCLE_DETAIL,
-                            onClick = {
-                                navController.navigate(AppDestinations.CIRCLE_DETAIL) {
-                                    popUpTo(AppDestinations.SUPERVISOR_DASHBOARD) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = if (currentRoute == AppDestinations.CIRCLE_DETAIL) Icons.Default.MenuBook else Icons.Outlined.MenuBook,
-                                    contentDescription = "الحلقة"
-                                )
-                            },
-                            label = { Text("الحلقة", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = SocietyBluePrimary,
-                                selectedTextColor = SocietyBluePrimary,
-                                indicatorColor = SocietyBlueLight
-                            )
-                        )
-
-                        // تسجيل الحضور
-                        NavigationBarItem(
-                            selected = currentRoute == AppDestinations.ATTENDANCE,
-                            onClick = {
-                                navController.navigate(AppDestinations.ATTENDANCE) {
-                                    popUpTo(AppDestinations.SUPERVISOR_DASHBOARD) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = if (currentRoute == AppDestinations.ATTENDANCE) Icons.Default.Checklist else Icons.Outlined.Checklist,
-                                    contentDescription = "الحضور"
-                                )
-                            },
-                            label = { Text("الحضور", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = SocietyBluePrimary,
-                                selectedTextColor = SocietyBluePrimary,
-                                indicatorColor = SocietyBlueLight
-                            )
-                        )
-
-                        // بوابة المعلم
-                        NavigationBarItem(
-                            selected = currentRoute == AppDestinations.TEACHER_PORTAL,
-                            onClick = {
-                                navController.navigate(AppDestinations.TEACHER_PORTAL) {
-                                    popUpTo(AppDestinations.SUPERVISOR_DASHBOARD) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = if (currentRoute == AppDestinations.TEACHER_PORTAL) Icons.Default.RecordVoiceOver else Icons.Outlined.RecordVoiceOver,
-                                    contentDescription = "بوابة المعلم"
-                                )
-                            },
-                            label = { Text("بوابة المعلم", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = SocietyBluePrimary,
-                                selectedTextColor = SocietyBluePrimary,
-                                indicatorColor = SocietyBlueLight
-                            )
-                        )
-
-                        // ولي الأمر
-                        NavigationBarItem(
-                            selected = currentRoute == AppDestinations.PARENT_PORTAL,
-                            onClick = {
-                                navController.navigate(AppDestinations.PARENT_PORTAL) {
-                                    popUpTo(AppDestinations.SUPERVISOR_DASHBOARD) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = if (currentRoute == AppDestinations.PARENT_PORTAL) Icons.Default.FamilyRestroom else Icons.Outlined.FamilyRestroom,
-                                    contentDescription = "ولي الأمر"
-                                )
-                            },
-                            label = { Text("ولي الأمر", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = SocietyBluePrimary,
-                                selectedTextColor = SocietyBluePrimary,
-                                indicatorColor = SocietyBlueLight
-                            )
-                        )
-
-                        // التقارير والشهادات
-                        NavigationBarItem(
-                            selected = currentRoute == AppDestinations.REPORTS,
-                            onClick = {
-                                navController.navigate(AppDestinations.REPORTS) {
-                                    popUpTo(AppDestinations.SUPERVISOR_DASHBOARD) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = if (currentRoute == AppDestinations.REPORTS) Icons.Default.Assessment else Icons.Outlined.Assessment,
-                                    contentDescription = "الشهادات"
-                                )
-                            },
-                            label = { Text("الشهادات", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = SocietyBluePrimary,
-                                selectedTextColor = SocietyBluePrimary,
-                                indicatorColor = SocietyBlueLight
-                            )
-                        )
-                    }
+                    AppNavigationDrawerSheet(
+                        currentRoute = currentRoute,
+                        currentTenant = currentTenant,
+                        onNavigate = { route ->
+                            navController.navigate(route) {
+                                popUpTo(AppDestinations.SUPERVISOR_DASHBOARD) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onCloseDrawer = {
+                            coroutineScope.launch { drawerState.close() }
+                        },
+                        onSwitchTenant = {
+                            navController.navigate(AppDestinations.LOGIN) {
+                                popUpTo(0)
+                            }
+                        },
+                        onLogout = {
+                            navController.navigate(AppDestinations.LOGIN) {
+                                popUpTo(0)
+                            }
+                        }
+                    )
                 }
-            },
-            containerColor = SlateBackground
-        ) { innerPadding ->
+            }
+        ) {
+            Scaffold(
+                bottomBar = {
+                    if (showBottomBar) {
+                        NavigationBar(
+                            containerColor = Color.White,
+                            tonalElevation = 8.dp,
+                            modifier = Modifier
+                                .windowInsetsPadding(WindowInsets.navigationBars)
+                                .testTag("app_navigation_bar")
+                        ) {
+                            // لوحة المشرف
+                            NavigationBarItem(
+                                selected = currentRoute == AppDestinations.SUPERVISOR_DASHBOARD,
+                                onClick = {
+                                    navController.navigate(AppDestinations.SUPERVISOR_DASHBOARD) {
+                                        popUpTo(AppDestinations.SUPERVISOR_DASHBOARD) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                icon = {
+                                    Icon(
+                                        imageVector = if (currentRoute == AppDestinations.SUPERVISOR_DASHBOARD) Icons.Default.Dashboard else Icons.Outlined.Dashboard,
+                                        contentDescription = "المشرف"
+                                    )
+                                },
+                                label = { Text("المشرف", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = SocietyBluePrimary,
+                                    selectedTextColor = SocietyBluePrimary,
+                                    indicatorColor = SocietyBlueLight
+                                )
+                            )
+
+                            // إدارة المعلمين
+                            NavigationBarItem(
+                                selected = currentRoute == AppDestinations.TEACHERS,
+                                onClick = {
+                                    navController.navigate(AppDestinations.TEACHERS) {
+                                        popUpTo(AppDestinations.SUPERVISOR_DASHBOARD) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                icon = {
+                                    Icon(
+                                        imageVector = if (currentRoute == AppDestinations.TEACHERS) Icons.Default.School else Icons.Outlined.School,
+                                        contentDescription = "المعلمون"
+                                    )
+                                },
+                                label = { Text("المعلمون", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = SocietyBluePrimary,
+                                    selectedTextColor = SocietyBluePrimary,
+                                    indicatorColor = SocietyBlueLight
+                                )
+                            )
+
+                            // تفاصيل الحلقة
+                            NavigationBarItem(
+                                selected = currentRoute == AppDestinations.CIRCLE_DETAIL,
+                                onClick = {
+                                    navController.navigate(AppDestinations.CIRCLE_DETAIL) {
+                                        popUpTo(AppDestinations.SUPERVISOR_DASHBOARD) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                icon = {
+                                    Icon(
+                                        imageVector = if (currentRoute == AppDestinations.CIRCLE_DETAIL) Icons.Default.MenuBook else Icons.Outlined.MenuBook,
+                                        contentDescription = "الحلقة"
+                                    )
+                                },
+                                label = { Text("الحلقة", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = SocietyBluePrimary,
+                                    selectedTextColor = SocietyBluePrimary,
+                                    indicatorColor = SocietyBlueLight
+                                )
+                            )
+
+                            // تسجيل الحضور
+                            NavigationBarItem(
+                                selected = currentRoute == AppDestinations.ATTENDANCE,
+                                onClick = {
+                                    navController.navigate(AppDestinations.ATTENDANCE) {
+                                        popUpTo(AppDestinations.SUPERVISOR_DASHBOARD) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                icon = {
+                                    Icon(
+                                        imageVector = if (currentRoute == AppDestinations.ATTENDANCE) Icons.Default.Checklist else Icons.Outlined.Checklist,
+                                        contentDescription = "الحضور"
+                                    )
+                                },
+                                label = { Text("الحضور", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = SocietyBluePrimary,
+                                    selectedTextColor = SocietyBluePrimary,
+                                    indicatorColor = SocietyBlueLight
+                                )
+                            )
+
+                            // قائمة Hamburger (المزيد) - تفتح القائمة الجانبية الكاملة لجميع الروابط
+                            NavigationBarItem(
+                                selected = drawerState.isOpen || (currentRoute != null && currentRoute !in listOf(
+                                    AppDestinations.SUPERVISOR_DASHBOARD,
+                                    AppDestinations.TEACHERS,
+                                    AppDestinations.CIRCLE_DETAIL,
+                                    AppDestinations.ATTENDANCE
+                                )),
+                                onClick = {
+                                    coroutineScope.launch {
+                                        if (drawerState.isOpen) drawerState.close() else drawerState.open()
+                                    }
+                                },
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Menu,
+                                        contentDescription = "قائمة الروابط والتنقل"
+                                    )
+                                },
+                                label = { Text("المزيد ☰", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = SocietyBluePrimary,
+                                    selectedTextColor = SocietyBluePrimary,
+                                    indicatorColor = SocietyBlueLight
+                                ),
+                                modifier = Modifier.testTag("nav_bottom_hamburger_menu_btn")
+                            )
+                        }
+                    }
+                },
+                containerColor = SlateBackground
+            ) { innerPadding ->
             NavHost(
                 navController = navController,
                 startDestination = AppDestinations.LOGIN,
@@ -388,4 +380,5 @@ fun SocietyApp() {
             }
         }
     }
+}
 }

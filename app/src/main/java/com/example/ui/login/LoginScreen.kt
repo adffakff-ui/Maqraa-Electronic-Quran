@@ -589,7 +589,11 @@ fun LoginScreen(
                     // ==========================================
                     // نموذج 'تواصل معنا' لطلب انضمام جمعية للنظام
                     // ==========================================
-                    ContactUsJoinSection()
+                    ContactUsJoinSection(
+                        onSocietyApproved = { approvedTenant ->
+                            onTenantSelected(approvedTenant)
+                        }
+                    )
 
                     Spacer(modifier = Modifier.height(18.dp))
                     Text(

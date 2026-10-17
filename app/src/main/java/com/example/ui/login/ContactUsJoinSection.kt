@@ -1,7 +1,6 @@
 package com.example.ui.login
 
 import android.content.ActivityNotFoundException
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
@@ -12,10 +11,10 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -31,26 +30,37 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.SocietyRepository
+import com.example.data.Tenant
 import com.example.ui.theme.*
 
 private const val SUPPORT_EMAIL = "adffakff@gmail.com"
 private const val BACKUP_SUPPORT_EMAIL = "join@quran-society.org"
 
+// ألوان واضحة عالية التباين لحل مشكلة عدم ظهور الخط أثناء الكتابة
+private val FieldTextColor = Color(0xFF0F172A) // أسود كحلي غامق جداً وواضح
+private val FieldBgColor = Color(0xFFF8FAFC) // خلفية فاتحة مريحة للعين داخل البطاقة
+private val FieldPlaceholderColor = Color(0xFF64748B) // رمادي متوسط مقروء
+private val FieldLabelColor = Color(0xFF334155) // رمادي داكن للعنوان
+
 /**
  * قسم "تواصل معنا - طلب انضمام جمعية للنظام"
- * يتيح لزوار المنظومة تقديم طلب انضمام لجمعيتهم أو مركزهم القرآني
- * مع ربط الطلب بالبريد الإلكتروني وتجهيز رسالة منظمة بكل تفاصيل الجمعية.
+ * يحتوي على:
+ * 1. نموذج تقديم طلب انضمام الجمعية مع إصلاح خط الكتابة ليظهر بوضوح تام.
+ * 2. ربط الطلب بالبريد الإلكتروني المعتمد للإدارة.
+ * 3. ميزة خاصة بالمطور والإدارة: فحص بيانات الجمعية وزر "موافقة على الطلب" لاعتماد الجمعية فوراً.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContactUsJoinSection(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onSocietyApproved: (Tenant) -> Unit = {}
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
@@ -70,6 +80,8 @@ fun ContactUsJoinSection(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var showSuccessDialog by remember { mutableStateOf(false) }
     var showNoEmailAppDialog by remember { mutableStateOf(false) }
+    var showDeveloperReviewModal by remember { mutableStateOf(false) }
+    var approvedTenantResult by remember { mutableStateOf<Tenant?>(null) }
 
     fun sendJoinRequestViaEmail() {
         if (societyName.trim().isEmpty()) {
@@ -125,6 +137,31 @@ fun ContactUsJoinSection(
             Toast.makeText(context, "تعذر فتح تطبيق البريد: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
             showNoEmailAppDialog = true
         }
+    }
+
+    // دالة الموافقة على الطلب واعتماد الجمعية في النظام (ميزة المطور)
+    fun approveSocietyRequest() {
+        val sName = if (societyName.isNotBlank()) societyName.trim() else "جمعية الفرقان لتحفيظ القرآن"
+        val sGov = if (governorateAndCity.isNotBlank()) governorateAndCity.trim() else "تعز"
+        val sPerson = if (contactPersonName.isNotBlank()) contactPersonName.trim() else "أ. عبد الله محمد"
+        val sPhone = if (phoneNumber.isNotBlank()) phoneNumber.trim() else "770123456"
+        val sEmail = if (contactEmail.isNotBlank()) contactEmail.trim() else "info@society.org"
+        val sNotes = notesOrRingsCount.ifBlank { "15 حلقة" }
+
+        val newTenant = SocietyRepository.approveNewSociety(
+            name = sName,
+            governorate = sGov,
+            supervisorName = sPerson,
+            phone = sPhone,
+            email = sEmail,
+            notes = sNotes
+        )
+
+        approvedTenantResult = newTenant
+        showDeveloperReviewModal = false
+        showSuccessDialog = false
+        onSocietyApproved(newTenant)
+        Toast.makeText(context, "تمت الموافقة واعتماد جمعية \"${newTenant.shortName}\" بنجاح!", Toast.LENGTH_LONG).show()
     }
 
     Card(
@@ -304,6 +341,26 @@ fun ContactUsJoinSection(
                         Spacer(modifier = Modifier.height(12.dp))
                     }
 
+                    // نمط الخط وحزم الألوان المشتركة لضمان ظهور النص والكتابة بوضوح
+                    val inputTextStyle = TextStyle(
+                        color = FieldTextColor,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    val inputFieldColors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = FieldTextColor,
+                        unfocusedTextColor = FieldTextColor,
+                        focusedContainerColor = FieldBgColor,
+                        unfocusedContainerColor = FieldBgColor,
+                        cursorColor = SocietyBluePrimary,
+                        focusedBorderColor = SocietyBluePrimary,
+                        unfocusedBorderColor = BorderSubtle,
+                        focusedLabelColor = SocietyBluePrimary,
+                        unfocusedLabelColor = FieldLabelColor,
+                        focusedPlaceholderColor = FieldPlaceholderColor,
+                        unfocusedPlaceholderColor = FieldPlaceholderColor
+                    )
+
                     // الحقل 1: اسم الجمعية أو المركز
                     OutlinedTextField(
                         value = societyName,
@@ -311,7 +368,8 @@ fun ContactUsJoinSection(
                             societyName = it
                             if (errorMessage != null) errorMessage = null
                         },
-                        label = { Text("اسم الجمعية / المركز القرآني *", fontSize = 12.sp) },
+                        textStyle = inputTextStyle,
+                        label = { Text("اسم الجمعية / المركز القرآني *", fontSize = 12.sp, fontWeight = FontWeight.Bold) },
                         placeholder = { Text("مثال: جمعية معاذ العلمية أو دار الفرقان", fontSize = 12.sp) },
                         leadingIcon = {
                             Icon(Icons.Default.AccountBalance, contentDescription = null, tint = SocietyBluePrimary)
@@ -321,10 +379,7 @@ fun ContactUsJoinSection(
                             .fillMaxWidth()
                             .testTag("contact_society_name_input"),
                         shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = SocietyBluePrimary,
-                            unfocusedBorderColor = BorderSubtle
-                        )
+                        colors = inputFieldColors
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -333,7 +388,8 @@ fun ContactUsJoinSection(
                     OutlinedTextField(
                         value = governorateAndCity,
                         onValueChange = { governorateAndCity = it },
-                        label = { Text("المحافظة والمدينة / الفرع", fontSize = 12.sp) },
+                        textStyle = inputTextStyle,
+                        label = { Text("المحافظة والمدينة / الفرع", fontSize = 12.sp, fontWeight = FontWeight.Bold) },
                         placeholder = { Text("مثال: تعز، صنعاء، عدن، مأرب، حضرموت...", fontSize = 12.sp) },
                         leadingIcon = {
                             Icon(Icons.Default.LocationOn, contentDescription = null, tint = EmeraldGreen)
@@ -343,10 +399,7 @@ fun ContactUsJoinSection(
                             .fillMaxWidth()
                             .testTag("contact_city_input"),
                         shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = SocietyBluePrimary,
-                            unfocusedBorderColor = BorderSubtle
-                        )
+                        colors = inputFieldColors
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -358,7 +411,8 @@ fun ContactUsJoinSection(
                             contactPersonName = it
                             if (errorMessage != null) errorMessage = null
                         },
-                        label = { Text("اسم المشرف أو مسؤول التواصل *", fontSize = 12.sp) },
+                        textStyle = inputTextStyle,
+                        label = { Text("اسم المشرف أو مسؤول التواصل *", fontSize = 12.sp, fontWeight = FontWeight.Bold) },
                         placeholder = { Text("مثال: الشيخ / أ. عبد الله محمد", fontSize = 12.sp) },
                         leadingIcon = {
                             Icon(Icons.Default.Person, contentDescription = null, tint = SocietyBluePrimary)
@@ -368,10 +422,7 @@ fun ContactUsJoinSection(
                             .fillMaxWidth()
                             .testTag("contact_person_input"),
                         shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = SocietyBluePrimary,
-                            unfocusedBorderColor = BorderSubtle
-                        )
+                        colors = inputFieldColors
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -383,7 +434,8 @@ fun ContactUsJoinSection(
                             phoneNumber = it
                             if (errorMessage != null) errorMessage = null
                         },
-                        label = { Text("رقم الجوال أو الواتساب *", fontSize = 12.sp) },
+                        textStyle = inputTextStyle,
+                        label = { Text("رقم الجوال أو الواتساب *", fontSize = 12.sp, fontWeight = FontWeight.Bold) },
                         placeholder = { Text("مثال: 770123456 أو +967...", fontSize = 12.sp) },
                         leadingIcon = {
                             Icon(Icons.Default.Phone, contentDescription = null, tint = GoldenAmber)
@@ -394,10 +446,7 @@ fun ContactUsJoinSection(
                             .fillMaxWidth()
                             .testTag("contact_phone_input"),
                         shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = SocietyBluePrimary,
-                            unfocusedBorderColor = BorderSubtle
-                        )
+                        colors = inputFieldColors
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -409,7 +458,8 @@ fun ContactUsJoinSection(
                             contactEmail = it
                             if (errorMessage != null) errorMessage = null
                         },
-                        label = { Text("البريد الإلكتروني للجمعية / المسؤول", fontSize = 12.sp) },
+                        textStyle = inputTextStyle,
+                        label = { Text("البريد الإلكتروني للجمعية / المسؤول", fontSize = 12.sp, fontWeight = FontWeight.Bold) },
                         placeholder = { Text("info@quran-society.org", fontSize = 12.sp) },
                         leadingIcon = {
                             Icon(Icons.Default.Email, contentDescription = null, tint = SocietyBluePrimary)
@@ -420,10 +470,7 @@ fun ContactUsJoinSection(
                             .fillMaxWidth()
                             .testTag("contact_email_input"),
                         shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = SocietyBluePrimary,
-                            unfocusedBorderColor = BorderSubtle
-                        )
+                        colors = inputFieldColors
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -432,7 +479,8 @@ fun ContactUsJoinSection(
                     OutlinedTextField(
                         value = notesOrRingsCount,
                         onValueChange = { notesOrRingsCount = it },
-                        label = { Text("عدد الحلقات التقريبي / ملاحظات إضافية", fontSize = 12.sp) },
+                        textStyle = inputTextStyle,
+                        label = { Text("عدد الحلقات التقريبي / ملاحظات إضافية", fontSize = 12.sp, fontWeight = FontWeight.Bold) },
                         placeholder = { Text("مثال: 12 حلقة للبنين و 8 للبنات، 250 طالباً...", fontSize = 12.sp) },
                         leadingIcon = {
                             Icon(Icons.Default.Notes, contentDescription = null, tint = TextMuted)
@@ -442,10 +490,7 @@ fun ContactUsJoinSection(
                             .fillMaxWidth()
                             .testTag("contact_notes_input"),
                         shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = SocietyBluePrimary,
-                            unfocusedBorderColor = BorderSubtle
-                        )
+                        colors = inputFieldColors
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -480,7 +525,90 @@ fun ContactUsJoinSection(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // زر إرسال بديل مباشر عبر تطبيق Gmail / البريد
+                    // ==========================================
+                    // ميزة المطور والإدارة: زر فحص واعتماد الطلب
+                    // ==========================================
+                    Surface(
+                        color = Color(0xFFF0FDF4),
+                        shape = RoundedCornerShape(14.dp),
+                        border = BorderStroke(1.dp, EmeraldGreen.copy(alpha = 0.4f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.VerifiedUser,
+                                        contentDescription = "ميزة المطور",
+                                        tint = EmeraldGreen,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "ميزة المطور: فحص واعتماد الطلب",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = EmeraldDark
+                                    )
+                                }
+                                Surface(
+                                    color = EmeraldGreen,
+                                    shape = RoundedCornerShape(6.dp)
+                                ) {
+                                    Text(
+                                        text = "المطور",
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            Text(
+                                text = "يمكن للمطور أو مدير النظام فحص بيانات الجمعية المدخلة والموافقة على الطلب فوراً لإدراج الجمعية في قائمة الجمعيات المعتمدة.",
+                                fontSize = 11.sp,
+                                color = TextMuted,
+                                lineHeight = 16.sp
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Button(
+                                onClick = { showDeveloperReviewModal = true },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(44.dp)
+                                    .testTag("open_developer_review_modal_btn"),
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.AssignmentTurnedIn,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "فحص بيانات الجمعية واعتماد الطلب",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // زر مراسلة مباشرة عبر Gmail
                     OutlinedButton(
                         onClick = {
                             val directIntent = Intent(Intent.ACTION_SENDTO).apply {
@@ -520,7 +648,130 @@ fun ContactUsJoinSection(
         }
     }
 
-    // Modal: Confirmation Dialog
+    // ==========================================
+    // نافذة فحص البيانات وزر الموافقة على الطلب (ميزة المطور)
+    // ==========================================
+    if (showDeveloperReviewModal) {
+        val effectiveName = if (societyName.isNotBlank()) societyName.trim() else "جمعية الفرقان لتحفيظ القرآن"
+        val effectiveGov = if (governorateAndCity.isNotBlank()) governorateAndCity.trim() else "تعز"
+        val effectivePerson = if (contactPersonName.isNotBlank()) contactPersonName.trim() else "أ. عبد الله محمد"
+        val effectivePhone = if (phoneNumber.isNotBlank()) phoneNumber.trim() else "770123456"
+        val effectiveEmail = if (contactEmail.isNotBlank()) contactEmail.trim() else "info@society.org"
+        val effectiveNotes = notesOrRingsCount.ifBlank { "15 حلقة قرآنية للبنين والبنات" }
+
+        AlertDialog(
+            onDismissRequest = { showDeveloperReviewModal = false },
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(CircleShape)
+                        .background(EmeraldLight),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.FactCheck,
+                        contentDescription = "فحص الطلب",
+                        tint = EmeraldGreen,
+                        modifier = Modifier.size(30.dp)
+                    )
+                }
+            },
+            title = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "فحص بيانات الجمعية واعتماد الطلب",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = "لوحة تحكم المطور ومراجعة الطلبات",
+                        fontSize = 11.sp,
+                        color = EmeraldGreen,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "تم تدقيق بيانات الطلب الواردة، يرجى مراجعتها أدناه قبل الضغط على زر الموافقة:",
+                        fontSize = 12.sp,
+                        color = TextMuted
+                    )
+
+                    Surface(
+                        color = Color(0xFFF8FAFC),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, BorderSubtle),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            DataReviewRow(label = "اسم الجمعية", value = effectiveName, isVerified = true)
+                            DataReviewRow(label = "المحافظة والفرع", value = effectiveGov, isVerified = true)
+                            DataReviewRow(label = "المشرف المسؤول", value = effectivePerson, isVerified = true)
+                            DataReviewRow(label = "الجوال / واتساب", value = effectivePhone, isVerified = true)
+                            DataReviewRow(label = "البريد الإلكتروني", value = effectiveEmail, isVerified = true)
+                            DataReviewRow(label = "الحلقات والملاحظات", value = effectiveNotes, isVerified = true)
+                        }
+                    }
+
+                    Surface(
+                        color = Color(0xFFEFF6FF),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Info, contentDescription = null, tint = SocietyBluePrimary, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "عند النقر على الموافقة، ستضاف الجمعية فوراً إلى قائمة جمعيات النظام وتصبح مستأجراً معتمداً.",
+                                fontSize = 10.sp,
+                                color = SocietyBluePrimary,
+                                lineHeight = 14.sp
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                // زر موافقة على الطلب
+                Button(
+                    onClick = { approveSocietyRequest() },
+                    colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(44.dp)
+                        .testTag("developer_approve_request_button")
+                ) {
+                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("موافقة على الطلب واعتماد الجمعية فوراً", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDeveloperReviewModal = false },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("إلغاء المراجعة", color = TextMuted)
+                }
+            }
+        )
+    }
+
+    // Modal: Confirmation Dialog after sending email (with developer approval option)
     if (showSuccessDialog) {
         AlertDialog(
             onDismissRequest = { showSuccessDialog = false },
@@ -550,28 +801,148 @@ fun ContactUsJoinSection(
                 )
             },
             text = {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     Text(
                         text = "تم تجهيز رسالة طلب انضمام جمعية \"$societyName\" ونقلها إلى تطبيق البريد الإلكتروني مع كافة البيانات والتفاصيل.",
                         fontSize = 13.sp,
                         color = TextMuted,
                         textAlign = TextAlign.Center
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "الوجهة: $SUPPORT_EMAIL\nسيقوم فريق إدارة النظام بمراجعة الطلب والتواصل معكم فوراً.",
+                        text = "الوجهة: $SUPPORT_EMAIL",
                         fontSize = 12.sp,
                         color = SocietyBluePrimary,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
+                    )
+
+                    Divider(color = BorderSubtle, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
+
+                    // بطاقة خيار المطور للموافقة السريعة
+                    Surface(
+                        color = Color(0xFFF0FDF4),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, EmeraldGreen.copy(alpha = 0.3f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text(
+                                text = "ميزة المطور: اعتماد سريع",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = EmeraldDark
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "يمكنك فحص البيانات والموافقة على الطلب الآن لإدراج الجمعية في النظام مباشرة دون انتظار الرد البريدي.",
+                                fontSize = 10.sp,
+                                color = TextMuted,
+                                lineHeight = 14.sp
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = {
+                                    showSuccessDialog = false
+                                    showDeveloperReviewModal = true
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(38.dp)
+                                    .testTag("dialog_open_developer_review_btn")
+                            ) {
+                                Icon(Icons.Default.FactCheck, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("فحص البيانات والموافقة على الطلب", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                OutlinedButton(
+                    onClick = { showSuccessDialog = false },
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("تم، حسناً")
+                }
+            }
+        )
+    }
+
+    // Modal: Confirmation when Society is Approved
+    if (approvedTenantResult != null) {
+        val t = approvedTenantResult!!
+        AlertDialog(
+            onDismissRequest = { approvedTenantResult = null },
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(CircleShape)
+                        .background(EmeraldLight),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Celebration,
+                        contentDescription = "تم الاعتماد",
+                        tint = EmeraldGreen,
+                        modifier = Modifier.size(34.dp)
+                    )
+                }
+            },
+            title = {
+                Text(
+                    text = "تهانينا! تم اعتماد الجمعية في النظام",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "تمت الموافقة على طلب انضمام الجمعية وإدراجها بنجاح في المنظومة:",
+                        fontSize = 12.sp,
+                        color = TextMuted
+                    )
+
+                    Surface(
+                        color = SocietyBlueLight,
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text(text = "• الجمعية: ${t.name}", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = SocietyBluePrimary)
+                            Text(text = "• الرمز المعتمد: ${t.code}", fontSize = 11.sp, color = TextDark)
+                            Text(text = "• الفرع والمحافظة: ${t.city}", fontSize = 11.sp, color = TextDark)
+                            Text(text = "• رقم الترخيص: ${t.licenseNumber}", fontSize = 11.sp, color = TextMuted)
+                            Text(text = "• عدد الحلقات المبدئي: ${t.ringsCount} حلقة", fontSize = 11.sp, color = TextMuted)
+                        }
+                    }
+
+                    Text(
+                        text = "أصبحت الجمعية الآن متاحة في قائمة المستأجرين ويمكن اختيارها من أعلى الشاشة أو بدء تسجيل المشرفين والطلاب.",
+                        fontSize = 11.sp,
+                        color = TextMuted,
+                        lineHeight = 15.sp
                     )
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        showSuccessDialog = false
-                        // Optional reset
+                        approvedTenantResult = null
+                        // Reset form
                         societyName = ""
                         governorateAndCity = ""
                         contactPersonName = ""
@@ -581,9 +952,9 @@ fun ContactUsJoinSection(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = SocietyBluePrimary),
                     shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.testTag("contact_success_dismiss_button")
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("تم، حسناً")
+                    Text("تم والبدء في الاستخدام")
                 }
             }
         )
@@ -652,5 +1023,37 @@ fun ContactUsJoinSection(
                 }
             }
         )
+    }
+}
+
+@Composable
+private fun DataReviewRow(
+    label: String,
+    value: String,
+    isVerified: Boolean
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = label, fontSize = 10.sp, color = TextMuted)
+            Text(text = value, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = FieldTextColor)
+        }
+        if (isVerified) {
+            Surface(
+                color = Color(0xFFDCFCE7),
+                shape = RoundedCornerShape(4.dp)
+            ) {
+                Text(
+                    text = "تم التدقيق ✓",
+                    fontSize = 9.sp,
+                    color = Color(0xFF15803D),
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                )
+            }
+        }
     }
 }
