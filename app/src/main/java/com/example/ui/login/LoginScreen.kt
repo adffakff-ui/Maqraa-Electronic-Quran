@@ -1,8 +1,10 @@
 package com.example.ui.login
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -42,6 +44,7 @@ import com.example.data.SocietyRepository
 import com.example.data.Tenant
 import com.example.data.UserRole
 import com.example.ui.theme.*
+import com.example.ui.settings.LanguageToggleChip
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -92,12 +95,45 @@ fun LoginScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
+                // Framer Motion style subtle entrance animations for feature cards
+                var startAnim by remember { mutableStateOf(false) }
+                LaunchedEffect(Unit) {
+                    startAnim = true
+                }
+                val cardAlpha by animateFloatAsState(
+                    targetValue = if (startAnim) 1f else 0f,
+                    animationSpec = tween(600, easing = FastOutSlowInEasing),
+                    label = "cardAlpha"
+                )
+                val cardScale by animateFloatAsState(
+                    targetValue = if (startAnim) 1f else 0.95f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow
+                    ),
+                    label = "cardScale"
+                )
+
+                // Language Toggle Top Bar
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .graphicsLayer(alpha = cardAlpha, scaleX = cardScale, scaleY = cardScale),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    LanguageToggleChip()
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 // ==========================================
                 // رأس الصفحة (Header): [شعار الجمعية] [اختيار الجمعية ▼]
                 // ==========================================
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .graphicsLayer(alpha = cardAlpha, scaleX = cardScale, scaleY = cardScale)
                         .testTag("tenant_header_card"),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -181,6 +217,7 @@ fun LoginScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .widthIn(max = 480.dp)
+                        .graphicsLayer(alpha = cardAlpha, scaleX = cardScale, scaleY = cardScale)
                         .testTag("login_card"),
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),

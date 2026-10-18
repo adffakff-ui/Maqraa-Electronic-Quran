@@ -35,6 +35,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 import com.example.R
 import com.example.data.*
 import com.example.ui.theme.*
@@ -44,10 +46,14 @@ import kotlinx.coroutines.launch
 @Composable
 fun SupervisorDashboardScreen(
     currentTenant: Tenant,
+    userRole: UserRole = UserRole.SUPERVISOR,
     onNavigateToTeachers: () -> Unit,
+    onNavigateToPlanner: () -> Unit = {},
+    onNavigateToChallenges: () -> Unit = {},
     onSwitchTenant: () -> Unit,
     onLogout: () -> Unit
 ) {
+    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
@@ -141,6 +147,8 @@ fun SupervisorDashboardScreen(
                             Triple("teachers", "المعلمون", Icons.Outlined.School),
                             Triple("students", "الطلاب", Icons.Outlined.People),
                             Triple("attendance", "الحضور", Icons.Outlined.CheckCircle),
+                            Triple("hifz_planner", "مخطط الحفظ الذكي", Icons.Outlined.EventNote),
+                            Triple("challenges", "التحديات والمسابقات القرآنية", Icons.Outlined.WorkspacePremium),
                             Triple("reports", "التقارير والشهادات", Icons.Outlined.Assessment),
                             Triple("notifications", "الإشعارات / الرسائل", Icons.Outlined.Notifications),
                             Triple("settings", "الإعدادات (الدفع، القوالب)", Icons.Outlined.Settings),
@@ -172,12 +180,21 @@ fun SupervisorDashboardScreen(
                                     },
                                     selected = isSelected,
                                     onClick = {
-                                        currentNavSelection = id
-                                        coroutineScope.launch { drawerState.close() }
-                                        if (id == "teachers") {
-                                            onNavigateToTeachers()
-                                        } else if (id != "dashboard") {
-                                            activeKpiDetail = id
+                                        if ((id == "settings" || id == "backup") && userRole != UserRole.SUPERVISOR) {
+                                            coroutineScope.launch { drawerState.close() }
+                                            Toast.makeText(context, "عزل الصلاحيات: عذراً، هذا القسم مخصص للمشرف العام فقط. دورك الحالي (${userRole.label}) لا يملك صلاحية التعديل.", Toast.LENGTH_LONG).show()
+                                        } else {
+                                            currentNavSelection = id
+                                            coroutineScope.launch { drawerState.close() }
+                                            if (id == "teachers") {
+                                                onNavigateToTeachers()
+                                            } else if (id == "hifz_planner") {
+                                                onNavigateToPlanner()
+                                            } else if (id == "challenges") {
+                                                onNavigateToChallenges()
+                                            } else if (id != "dashboard") {
+                                                activeKpiDetail = id
+                                            }
                                         }
                                     },
                                     shape = RoundedCornerShape(10.dp),

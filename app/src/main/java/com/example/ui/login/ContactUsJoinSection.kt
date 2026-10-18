@@ -250,48 +250,55 @@ fun ContactUsJoinSection(
                 lineHeight = 18.sp
             )
 
-            // Direct support email pill badge
+            // Direct support email pill badge (pressable without revealing email)
             Spacer(modifier = Modifier.height(10.dp))
             Surface(
                 color = SocietyBlueLight,
                 shape = RoundedCornerShape(10.dp),
                 border = BorderStroke(1.dp, SocietyBluePrimary.copy(alpha = 0.2f)),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        val directIntent = Intent(Intent.ACTION_SENDTO).apply {
+                            data = Uri.parse("mailto:$SUPPORT_EMAIL?subject=${Uri.encode("استفسار للدعم الفني")}")
+                        }
+                        try {
+                            context.startActivity(directIntent)
+                        } catch (e: Exception) {
+                            clipboardManager.setText(AnnotatedString(SUPPORT_EMAIL))
+                            Toast.makeText(context, "تم نسخ بيانات التواصل للدعم الفني", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    .testTag("support_email_pill")
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Outlined.Email,
+                            imageVector = Icons.Outlined.SupportAgent,
                             contentDescription = null,
                             tint = SocietyBluePrimary,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(18.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "البريد المعتمد: $SUPPORT_EMAIL",
+                            text = "تواصل مع فريق الدعم الفني والتقني (اضغط هنا)",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = SocietyBluePrimary
                         )
                     }
-                    TextButton(
-                        onClick = {
-                            clipboardManager.setText(AnnotatedString(SUPPORT_EMAIL))
-                            Toast.makeText(context, "تم نسخ البريد الإلكتروني", Toast.LENGTH_SHORT).show()
-                        },
-                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
-                        modifier = Modifier
-                            .height(28.dp)
-                            .testTag("copy_support_email_btn")
-                    ) {
-                        Text("نسخ", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = SocietyBluePrimary)
-                    }
+                    Icon(
+                        imageVector = Icons.Default.ArrowForward,
+                        contentDescription = null,
+                        tint = SocietyBluePrimary,
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
             }
 
@@ -525,86 +532,7 @@ fun ContactUsJoinSection(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // ==========================================
-                    // ميزة المطور والإدارة: زر فحص واعتماد الطلب
-                    // ==========================================
-                    Surface(
-                        color = Color(0xFFF0FDF4),
-                        shape = RoundedCornerShape(14.dp),
-                        border = BorderStroke(1.dp, EmeraldGreen.copy(alpha = 0.4f)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = Icons.Default.VerifiedUser,
-                                        contentDescription = "ميزة المطور",
-                                        tint = EmeraldGreen,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = "ميزة المطور: فحص واعتماد الطلب",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = EmeraldDark
-                                    )
-                                }
-                                Surface(
-                                    color = EmeraldGreen,
-                                    shape = RoundedCornerShape(6.dp)
-                                ) {
-                                    Text(
-                                        text = "المطور",
-                                        fontSize = 9.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                    )
-                                }
-                            }
 
-                            Spacer(modifier = Modifier.height(6.dp))
-
-                            Text(
-                                text = "يمكن للمطور أو مدير النظام فحص بيانات الجمعية المدخلة والموافقة على الطلب فوراً لإدراج الجمعية في قائمة الجمعيات المعتمدة.",
-                                fontSize = 11.sp,
-                                color = TextMuted,
-                                lineHeight = 16.sp
-                            )
-
-                            Spacer(modifier = Modifier.height(10.dp))
-
-                            Button(
-                                onClick = { showDeveloperReviewModal = true },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(44.dp)
-                                    .testTag("open_developer_review_modal_btn"),
-                                shape = RoundedCornerShape(10.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.AssignmentTurnedIn,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "فحص بيانات الجمعية واعتماد الطلب",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                            }
-                        }
-                    }
 
                     Spacer(modifier = Modifier.height(10.dp))
 
@@ -638,7 +566,7 @@ fun ContactUsJoinSection(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "مراسلة مباشرة إلى $SUPPORT_EMAIL",
+                            text = "مراسلة الدعم الفني مباشرة",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -812,55 +740,12 @@ fun ContactUsJoinSection(
                         textAlign = TextAlign.Center
                     )
                     Text(
-                        text = "الوجهة: $SUPPORT_EMAIL",
+                        text = "الوجهة: بريد الدعم الفني المعتمد للمنظومة",
                         fontSize = 12.sp,
                         color = SocietyBluePrimary,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
                     )
-
-                    Divider(color = BorderSubtle, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
-
-                    // بطاقة خيار المطور للموافقة السريعة
-                    Surface(
-                        color = Color(0xFFF0FDF4),
-                        shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.dp, EmeraldGreen.copy(alpha = 0.3f)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(10.dp)) {
-                            Text(
-                                text = "ميزة المطور: اعتماد سريع",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = EmeraldDark
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "يمكنك فحص البيانات والموافقة على الطلب الآن لإدراج الجمعية في النظام مباشرة دون انتظار الرد البريدي.",
-                                fontSize = 10.sp,
-                                color = TextMuted,
-                                lineHeight = 14.sp
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Button(
-                                onClick = {
-                                    showSuccessDialog = false
-                                    showDeveloperReviewModal = true
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(38.dp)
-                                    .testTag("dialog_open_developer_review_btn")
-                            ) {
-                                Icon(Icons.Default.FactCheck, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("فحص البيانات والموافقة على الطلب", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    }
                 }
             },
             confirmButton = {
@@ -994,8 +879,8 @@ fun ContactUsJoinSection(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = SUPPORT_EMAIL,
-                            fontSize = 13.sp,
+                            text = "فريق الدعم الفني والتقني (البريد الإلكتروني الرسمي)",
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = SocietyBluePrimary,
                             textAlign = TextAlign.Center,
@@ -1008,7 +893,7 @@ fun ContactUsJoinSection(
                 Button(
                     onClick = {
                         clipboardManager.setText(AnnotatedString(SUPPORT_EMAIL))
-                        Toast.makeText(context, "تم نسخ البريد بنجاح: $SUPPORT_EMAIL", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "تم نسخ بيانات الدعم الفني بنجاح", Toast.LENGTH_SHORT).show()
                         showNoEmailAppDialog = false
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = SocietyBluePrimary),

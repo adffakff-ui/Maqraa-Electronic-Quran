@@ -34,6 +34,8 @@ import com.example.ui.reports.ReportsAndCertificatesScreen
 import com.example.ui.supervisor.SupervisorRegistrationScreen
 import com.example.ui.teacherportal.TeacherPortalScreen
 import com.example.ui.teachers.TeacherManagementScreen
+import com.example.ui.planner.HifzPlannerScreen
+import com.example.ui.challenges.QuranChallengesScreen
 import com.example.ui.theme.*
 import kotlinx.coroutines.launch
 
@@ -48,6 +50,8 @@ object AppDestinations {
     const val AUDIO_RECITATION = "audio_recitation"
     const val PARENT_PORTAL = "parent_portal"
     const val REPORTS = "reports"
+    const val HIFZ_PLANNER = "hifz_planner"
+    const val QURAN_CHALLENGES = "quran_challenges"
 }
 
 class MainActivity : ComponentActivity() {
@@ -299,7 +303,10 @@ fun SocietyApp() {
                 composable(AppDestinations.SUPERVISOR_DASHBOARD) {
                     SupervisorDashboardScreen(
                         currentTenant = currentTenant,
+                        userRole = activeUserRole,
                         onNavigateToTeachers = { navController.navigate(AppDestinations.TEACHERS) },
+                        onNavigateToPlanner = { navController.navigate(AppDestinations.HIFZ_PLANNER) },
+                        onNavigateToChallenges = { navController.navigate(AppDestinations.QURAN_CHALLENGES) },
                         onSwitchTenant = {
                             navController.navigate(AppDestinations.LOGIN) {
                                 popUpTo(0)
@@ -318,6 +325,21 @@ fun SocietyApp() {
                     TeacherManagementScreen(
                         currentTenant = currentTenant,
                         onBack = { navController.popBackStack() }
+                    )
+                }
+
+                // مخطط الحفظ والمراجعة الذكي
+                composable(AppDestinations.HIFZ_PLANNER) {
+                    HifzPlannerScreen(
+                        currentTenant = currentTenant,
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+
+                // التحديات والمسابقات القرآنية
+                composable(AppDestinations.QURAN_CHALLENGES) {
+                    QuranChallengesScreen(
+                        onNavigateBack = { navController.popBackStack() }
                     )
                 }
 
