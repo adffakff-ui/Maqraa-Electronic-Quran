@@ -154,6 +154,13 @@ fun AudioRecitationScreen(
                     }
                 }
 
+                // Microphone Recorder Card
+                MicRecorderCard(
+                    onRecordingSaved = { path ->
+                        snackbarMessage = "تم حفظ ملف التسجيل الصوتي محلياً بنجاح ($path)"
+                    }
+                )
+
                 // ==========================================
                 // قسم الإدخال وتحديد القراءة والرواية
                 // ==========================================
