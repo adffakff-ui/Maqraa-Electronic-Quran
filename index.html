@@ -7,6 +7,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
     :root {
       --primary: #1A56DB;
@@ -590,6 +594,47 @@
         </div>
       </div>
     </div>
+
+    <!-- قسم مخطط تقدم الطلاب الشهري (المحفوظ مقابل المستهدف من السور باستخدام Recharts) -->
+    <div style="background: #FFFFFF; border-radius: 20px; padding: 30px; border: 1px solid var(--border); margin-bottom: 40px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <h3 style="font-size: 20px; font-weight: 800; color: var(--primary-dark);">📊 مخطط تقدم الطلاب الشهري (المحفوظ مقابل المستهدف من السور)</h3>
+          <p style="font-size: 13px; color: var(--text-muted);">تحليل مرئي تفاعلي باستخدام مكتبة Recharts لأداء الحلقات القرآنية</p>
+        </div>
+      </div>
+      <div id="monthly-progress-chart-container" style="width: 100%; height: 360px; direction: ltr;"></div>
+    </div>
+
+    <script type="text/babel">
+      const data = [
+        { month: 'محرم', saved: 18, target: 20 },
+        { month: 'صفر', saved: 22, target: 22 },
+        { month: 'ربيع أول', saved: 25, target: 24 },
+        { month: 'ربيع ثاني', saved: 30, target: 28 },
+        { month: 'جمادى أول', saved: 35, target: 32 },
+        { month: 'جمادى ثاني', saved: 42, target: 40 },
+      ];
+
+      function MonthlyProgressChart() {
+        return (
+          <Recharts.ResponsiveContainer width="100%" height="100%">
+            <Recharts.BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <Recharts.CartesianGrid strokeDasharray="3 3" />
+              <Recharts.XAxis dataKey="month" />
+              <Recharts.YAxis />
+              <Recharts.Tooltip />
+              <Recharts.Legend />
+              <Recharts.Bar dataKey="saved" name="المحفوظ (سور)" fill="#1A56DB" radius={[8, 8, 0, 0]} />
+              <Recharts.Bar dataKey="target" name="المستهدف (سور)" fill="#059669" radius={[8, 8, 0, 0]} />
+            </Recharts.BarChart>
+          </Recharts.ResponsiveContainer>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById('monthly-progress-chart-container'));
+      root.render(<MonthlyProgressChart />);
+    </script>
 
   </main>
 

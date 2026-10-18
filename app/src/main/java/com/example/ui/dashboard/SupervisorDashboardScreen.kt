@@ -50,6 +50,9 @@ fun SupervisorDashboardScreen(
     onNavigateToTeachers: () -> Unit,
     onNavigateToPlanner: () -> Unit = {},
     onNavigateToChallenges: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {},
+    onNavigateToOwnerControl: () -> Unit = {},
+    onNavigateToFirestoreTenants: () -> Unit = {},
     onSwitchTenant: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -140,20 +143,25 @@ fun SupervisorDashboardScreen(
                         Divider(color = BorderSubtle)
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        // عناصر القائمة الجانبية
-                        val navItems = listOf(
-                            Triple("dashboard", "لوحة التحكم (مُلخّص)", Icons.Outlined.Dashboard),
-                            Triple("rings", "الحلقات", Icons.Outlined.MenuBook),
-                            Triple("teachers", "المعلمون", Icons.Outlined.School),
-                            Triple("students", "الطلاب", Icons.Outlined.People),
-                            Triple("attendance", "الحضور", Icons.Outlined.CheckCircle),
-                            Triple("hifz_planner", "مخطط الحفظ الذكي", Icons.Outlined.EventNote),
-                            Triple("challenges", "التحديات والمسابقات القرآنية", Icons.Outlined.WorkspacePremium),
-                            Triple("reports", "التقارير والشهادات", Icons.Outlined.Assessment),
-                            Triple("notifications", "الإشعارات / الرسائل", Icons.Outlined.Notifications),
-                            Triple("settings", "الإعدادات (الدفع، القوالب)", Icons.Outlined.Settings),
-                            Triple("backup", "النسخ الاحتياطي / استعادة", Icons.Outlined.CloudSync)
-                        )
+                        // عناصر القائمة الجانبية (يتم إخفاء أقسام المالك تماماً عن غيره)
+                        val navItems = buildList {
+                            add(Triple("dashboard", "لوحة التحكم (مُلخّص)", Icons.Outlined.Dashboard))
+                            add(Triple("rings", "الحلقات", Icons.Outlined.MenuBook))
+                            add(Triple("teachers", "المعلمون", Icons.Outlined.School))
+                            add(Triple("students", "الطلاب", Icons.Outlined.People))
+                            add(Triple("attendance", "الحضور", Icons.Outlined.CheckCircle))
+                            add(Triple("hifz_planner", "مخطط الحفظ الذكي", Icons.Outlined.EventNote))
+                            add(Triple("challenges", "التحديات والمسابقات القرآنية", Icons.Outlined.WorkspacePremium))
+                            add(Triple("profile", "معلومات الحساب والصلاحيات", Icons.Outlined.PersonPin))
+                            if (userRole == UserRole.OWNER) {
+                                add(Triple("owner_control", "👑 لوحة تحكم مالك النظام (Super Admin)", Icons.Default.Shield))
+                                add(Triple("owner_firestore", "⚡ إدارة جمعيات Firestore (خاص بالمالك)", Icons.Default.CloudQueue))
+                            }
+                            add(Triple("reports", "التقارير والشهادات", Icons.Outlined.Assessment))
+                            add(Triple("notifications", "الإشعارات / الرسائل", Icons.Outlined.Notifications))
+                            add(Triple("settings", "الإعدادات (الدفع، القوالب)", Icons.Outlined.Settings))
+                            add(Triple("backup", "النسخ الاحتياطي / استعادة", Icons.Outlined.CloudSync))
+                        }
 
                         Column(
                             modifier = Modifier
@@ -180,7 +188,7 @@ fun SupervisorDashboardScreen(
                                     },
                                     selected = isSelected,
                                     onClick = {
-                                        if ((id == "settings" || id == "backup") && userRole != UserRole.SUPERVISOR) {
+                                        if ((id == "settings" || id == "backup") && userRole != UserRole.SUPERVISOR && userRole != UserRole.OWNER) {
                                             coroutineScope.launch { drawerState.close() }
                                             Toast.makeText(context, "عزل الصلاحيات: عذراً، هذا القسم مخصص للمشرف العام فقط. دورك الحالي (${userRole.label}) لا يملك صلاحية التعديل.", Toast.LENGTH_LONG).show()
                                         } else {
@@ -192,6 +200,12 @@ fun SupervisorDashboardScreen(
                                                 onNavigateToPlanner()
                                             } else if (id == "challenges") {
                                                 onNavigateToChallenges()
+                                            } else if (id == "profile") {
+                                                onNavigateToProfile()
+                                            } else if (id == "owner_control") {
+                                                onNavigateToOwnerControl()
+                                            } else if (id == "owner_firestore") {
+                                                onNavigateToFirestoreTenants()
                                             } else if (id != "dashboard") {
                                                 activeKpiDetail = id
                                             }

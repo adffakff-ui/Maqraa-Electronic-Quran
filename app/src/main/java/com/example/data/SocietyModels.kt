@@ -33,6 +33,7 @@ data class UserProfile(
 )
 
 enum class UserRole(val label: String) {
+    OWNER("مالك التطبيق (Super Admin)"),
     SUPERVISOR("المشرف العام"),
     TEACHER("معلم حلقات"),
     GUARDIAN("ولي أمر")
@@ -787,6 +788,26 @@ object SocietyRepository {
         return approvedTenant
     }
 
+    val masterOwner = UserProfile(
+        id = "owner_master",
+        name = "مالك التطبيق والنظام",
+        title = "Super Administrator & Platform Owner",
+        role = UserRole.OWNER,
+        phone = "775484201",
+        email = "adffakff@gmail.com"
+    )
+
+    var systemMaintenanceMode by mutableStateOf(false)
+    var globalRegistrationActive by mutableStateOf(true)
+
+    fun isOwner(input: String): Boolean {
+        return OwnerSecurityManager.verifyOwnerSecret(input)
+    }
+
+    fun removeTenant(tenantId: String) {
+        tenants = tenants.filter { it.id != tenantId }
+    }
+
     val defaultSupervisor = UserProfile(
         id = "sup_01",
         name = "أ. عبد الرحمن السعيد",
@@ -1160,6 +1181,110 @@ object SocietyRepository {
         ExportLogRecord("exp_2", "كشف درجات الاختبارات الفصلية", "15/10/2026 04:15 م", "أ. عبد الرحمن السعيد (المشرف)", 148, "CSV"),
         ExportLogRecord("exp_3", "إصدار شهادات إتمام الحفظ دفعة ربيع الأول", "12/10/2026 09:00 ص", "أ. عبد الرحمن السعيد (المشرف)", 42, "PDF")
     )
+
+    // ==========================================
+    // إدارة وتحكم المالك الشامل (Owner Master State & CRUD)
+    // ==========================================
+    var allTeachers by mutableStateOf(getInitialTeachers())
+    var allRings by mutableStateOf(getInitialRings())
+    var allStudents by mutableStateOf(getInitialCircleStudents())
+    var allUsers by mutableStateOf(
+        listOf(
+            masterOwner,
+            defaultSupervisor,
+            UserProfile("usr_tch_1", "الشيخ عبد الله بن محمد المنصور", "معلم حلقة الإتقان", UserRole.TEACHER, "0503456781", "almansoor@maknoon.org.sa"),
+            UserProfile("usr_tch_2", "الشيخ فهد بن سليمان الدوسري", "معلم حلقة أبي بن كعب", UserRole.TEACHER, "0548912345", "f.aldosari@maknoon.org.sa"),
+            UserProfile("usr_par_1", "أ. خالد العمري (ولي أمر)", "ولي أمر الطالب أنس", UserRole.GUARDIAN, "0561239874", "khaled.omari@gmail.com")
+        )
+    )
+
+    fun addTenant(tenant: Tenant) {
+        tenants = listOf(tenant) + tenants
+    }
+
+    fun updateTenant(tenant: Tenant) {
+        tenants = tenants.map { if (it.id == tenant.id) tenant else it }
+    }
+
+    fun addTeacher(teacher: Teacher) {
+        allTeachers = listOf(teacher) + allTeachers
+    }
+
+    fun updateTeacher(teacher: Teacher) {
+        allTeachers = allTeachers.map { if (it.id == teacher.id) teacher else it }
+    }
+
+    fun removeTeacher(teacherId: String) {
+        allTeachers = allTeachers.filter { it.id != teacherId }
+    }
+
+    fun addRing(ring: QuranRing) {
+        allRings = listOf(ring) + allRings
+    }
+
+    fun updateRing(ring: QuranRing) {
+        allRings = allRings.map { if (it.id == ring.id) ring else it }
+    }
+
+    fun removeRing(ringId: String) {
+        allRings = allRings.filter { it.id != ringId }
+    }
+
+    fun addStudent(student: CircleStudent) {
+        allStudents = listOf(student) + allStudents
+    }
+
+    fun updateStudent(student: CircleStudent) {
+        allStudents = allStudents.map { if (it.id == student.id) student else it }
+    }
+
+    fun removeStudent(studentId: String) {
+        allStudents = allStudents.filter { it.id != studentId }
+    }
+
+    fun updateUserRole(userId: String, newRole: UserRole) {
+        allUsers = allUsers.map { if (it.id == userId) it.copy(role = newRole) else it }
+    }
+
+    fun addUser(user: UserProfile) {
+        allUsers = listOf(user) + allUsers
+    }
+
+    fun removeUser(userId: String) {
+        if (userId != masterOwner.id) {
+            allUsers = allUsers.filter { it.id != userId }
+        }
+    }
+
+    // تهيئة واستعادة كافة بيانات التطبيق للحالة الافتراضية الأصلية
+    fun resetToFactoryDefaults() {
+        tenants = initialTenants
+        allTeachers = getInitialTeachers()
+        allRings = getInitialRings()
+        allStudents = getInitialCircleStudents()
+        allUsers = listOf(
+            masterOwner,
+            defaultSupervisor,
+            UserProfile("usr_tch_1", "الشيخ عبد الله بن محمد المنصور", "معلم حلقة الإتقان", UserRole.TEACHER, "0503456781", "almansoor@maknoon.org.sa"),
+            UserProfile("usr_tch_2", "الشيخ فهد بن سليمان الدوسري", "معلم حلقة أبي بن كعب", UserRole.TEACHER, "0548912345", "f.aldosari@maknoon.org.sa"),
+            UserProfile("usr_par_1", "أ. خالد العمري (ولي أمر)", "ولي أمر الطالب أنس", UserRole.GUARDIAN, "0561239874", "khaled.omari@gmail.com")
+        )
+        systemMaintenanceMode = false
+        globalRegistrationActive = true
+    }
+
+    // تفريغ وتصفير بيانات التطبيق بالكامل مع الحفاظ حصراً على حساب المالك
+    fun wipeAllDataPreservingOwner() {
+        tenants = emptyList()
+        allTeachers = emptyList()
+        allRings = emptyList()
+        allStudents = emptyList()
+        allUsers = listOf(masterOwner)
+    }
+
+    fun isAuthorizedOwner(emailOrPhone: String): Boolean {
+        return OwnerSecurityManager.verifyOwnerSecret(emailOrPhone)
+    }
 }
 
 

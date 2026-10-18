@@ -43,8 +43,13 @@ import com.example.R
 import com.example.data.SocietyRepository
 import com.example.data.Tenant
 import com.example.data.UserRole
+import com.example.data.OwnerSecurityManager
+import com.example.data.SecurityIncident
 import com.example.ui.theme.*
 import com.example.ui.settings.LanguageToggleChip
+import com.example.ui.security.BiometricHelper
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -57,6 +62,7 @@ fun LoginScreen(
     onNavigateToSupervisorRegistration: () -> Unit = {}
 ) {
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
     var usernameOrPhone by remember { mutableStateOf("0551234567") }
     var password by remember { mutableStateOf("••••••••") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -69,6 +75,14 @@ fun LoginScreen(
     var quickAuthMethod by remember { mutableStateOf<String?>(null) } // "WhatsApp", "SMS", "Email"
     var isContextLoading by remember { mutableStateOf(false) }
     var loadingStatusText by remember { mutableStateOf("") }
+
+    // Owner Security & Intrusion Detection States
+    var showOwnerSecretDialog by remember { mutableStateOf(false) }
+    var ownerSecretInput by remember { mutableStateOf("") }
+    var isOwnerSecretHidden by remember { mutableStateOf(true) }
+    var ownerAuthErrorMessage by remember { mutableStateOf<String?>(null) }
+    var showIntrusionAlertDialog by remember { mutableStateOf(false) }
+    var currentIncidentForAlert by remember { mutableStateOf<SecurityIncident?>(null) }
 
     // Enforce RTL
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
@@ -360,6 +374,7 @@ fun LoginScreen(
                             keyboardActions = KeyboardActions(
                                 onDone = {
                                     startLoginProcess(
+                                        userInput = usernameOrPhone,
                                         currentTenant = currentTenant,
                                         coroutineScope = coroutineScope,
                                         setLoading = { isContextLoading = it },
@@ -393,6 +408,7 @@ fun LoginScreen(
                             Button(
                                 onClick = {
                                     startLoginProcess(
+                                        userInput = usernameOrPhone,
                                         currentTenant = currentTenant,
                                         coroutineScope = coroutineScope,
                                         setLoading = { isContextLoading = it },
@@ -425,6 +441,51 @@ fun LoginScreen(
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // زر وصول مالك النظام المشفر والمحمي (Owner Root Access - بدون إظهار أي بريد أو هاتف)
+                        OutlinedButton(
+                            onClick = {
+                                ownerSecretInput = ""
+                                ownerAuthErrorMessage = null
+                                showOwnerSecretDialog = true
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(46.dp)
+                                .testTag("owner_root_portal_btn"),
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.dp, Color(0xFFD97706).copy(alpha = 0.6f)),
+                            colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFFFEF3C7).copy(alpha = 0.35f))
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AdminPanelSettings,
+                                contentDescription = null,
+                                tint = Color(0xFFD97706),
+                                modifier = Modifier.size(19.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "👑 بوابة المالك والتحكم المركزي (مشفر)",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF92400E)
+                            )
+                            Spacer(modifier = Modifier.weight(1f))
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = Color(0xFFD97706).copy(alpha = 0.15f)
+                            ) {
+                                Text(
+                                    text = "حماية Root",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF92400E),
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
                             }
                         }
 
@@ -473,31 +534,6 @@ fun LoginScreen(
                                     color = EmeraldDark
                                 )
                             }
-
-                            OutlinedButton(
-                                onClick = onNavigateToSupervisorRegistration,
-                                shape = RoundedCornerShape(12.dp),
-                                border = BorderStroke(1.dp, SocietyBluePrimary.copy(alpha = 0.5f)),
-                                colors = ButtonDefaults.outlinedButtonColors(containerColor = SocietyBlueLight.copy(alpha = 0.5f)),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(44.dp)
-                                    .testTag("direct_supervisor_registration_btn")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.AdminPanelSettings,
-                                    contentDescription = null,
-                                    tint = SocietyBluePrimary,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "تسجيل مشرف جديد (Supervisor Registration)",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = SocietyBluePrimary
-                                )
-                            }
                         }
                     }
                 }
@@ -525,6 +561,47 @@ fun LoginScreen(
                             modifier = Modifier.padding(horizontal = 12.dp)
                         )
                         Divider(modifier = Modifier.weight(1f), color = BorderSubtle)
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Biometric Login Button
+                    val context = LocalContext.current
+                    OutlinedButton(
+                        onClick = {
+                            BiometricHelper.showBiometricPrompt(
+                                context = context,
+                                onSuccess = {
+                                    onLoginSuccess(currentTenant, UserRole.SUPERVISOR)
+                                },
+                                onError = { err ->
+                                    errorMessage = "فشل المصادقة الحيوية: $err"
+                                }
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .testTag("biometric_login_btn"),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, SocietyBluePrimary.copy(alpha = 0.6f)),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = SocietyBlueLight.copy(alpha = 0.4f)
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Fingerprint,
+                            contentDescription = "بصمة",
+                            tint = SocietyBluePrimary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "تسجيل الدخول السريع بالبصمة الحيوية",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = SocietyBluePrimary
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -1167,6 +1244,7 @@ fun LoginScreen(
                             }
                         } else {
                             val roleTitle = when (selectedRole) {
+                                UserRole.OWNER -> "مالك التطبيق (Super Admin)"
                                 UserRole.SUPERVISOR -> "المشرف العام"
                                 UserRole.TEACHER -> "معلم حلقات"
                                 UserRole.GUARDIAN -> "ولي أمر"
@@ -1269,8 +1347,9 @@ fun LoginScreen(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         if (!isCodeSent) {
+                            val targetDisplay = if (method == "WhatsApp") "775484201 (واتساب المالك)" else "775484201"
                             Text(
-                                text = "الهدف: 0551234567 • الجمعية: ${currentTenant.shortName}",
+                                text = "الهدف: $targetDisplay • الجمعية: ${currentTenant.shortName}",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = TextDark
@@ -1294,8 +1373,10 @@ fun LoginScreen(
                             if (!isCodeSent) {
                                 isCodeSent = true
                             } else {
+                                val usedInput = usernameOrPhone
                                 quickAuthMethod = null
                                 startLoginProcess(
+                                    userInput = usedInput,
                                     currentTenant = currentTenant,
                                     coroutineScope = coroutineScope,
                                     setLoading = { isContextLoading = it },
@@ -1322,11 +1403,330 @@ fun LoginScreen(
                 }
             )
         }
+
+        // نافذة التحقق الأمني المحمية لبوابة المالك (Owner Root Security Gateway)
+        if (showOwnerSecretDialog) {
+            AlertDialog(
+                onDismissRequest = {
+                    if (!OwnerSecurityManager.isLockdownActive) {
+                        showOwnerSecretDialog = false
+                    }
+                },
+                icon = {
+                    Box(
+                        modifier = Modifier
+                            .size(52.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFFEF3C7)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AdminPanelSettings,
+                            contentDescription = null,
+                            tint = Color(0xFFD97706),
+                            modifier = Modifier.size(30.dp)
+                        )
+                    }
+                },
+                title = {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "بوابة المالك والتحكم المركزي",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 17.sp,
+                            textAlign = TextAlign.Center
+                        )
+                        Text(
+                            text = "نظام التوثيق الأمني والمراقبة الفورية",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                },
+                text = {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        // بطاقة هوية المالك المحجوبة أمنياً (Masked Credentials)
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A))
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Lock,
+                                    contentDescription = null,
+                                    tint = GoldenAmber,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text(
+                                        text = "حساب المالك المعتمد (بيانات مشفرة ومحجوبة):",
+                                        color = Color(0xFF94A3B8),
+                                        fontSize = 10.sp
+                                    )
+                                    Text(
+                                        text = "${OwnerSecurityManager.maskEmail()} • ${OwnerSecurityManager.maskPhone()}",
+                                        color = Color.White,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        if (OwnerSecurityManager.isLockdownActive) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = CardDefaults.cardColors(containerColor = StatusError.copy(alpha = 0.12f))
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Warning,
+                                        contentDescription = null,
+                                        tint = StatusError,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "تم تجميد الوصول مؤقتاً لتكرار المحاولات الخاطئة! تم إرسال بلاغ أمني عاجل لواتساب وبريد المالك.",
+                                        fontSize = 11.sp,
+                                        color = StatusError,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+                        }
+
+                        Text(
+                            text = "أدخل المفتاح السري أو رمز المالك:",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        OutlinedTextField(
+                            value = ownerSecretInput,
+                            onValueChange = {
+                                ownerSecretInput = it
+                                ownerAuthErrorMessage = null
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("owner_secret_field"),
+                            placeholder = { Text("المفتاح السري / رمز التحقق", fontSize = 12.sp) },
+                            singleLine = true,
+                            visualTransformation = if (isOwnerSecretHidden) PasswordVisualTransformation() else VisualTransformation.None,
+                            trailingIcon = {
+                                IconButton(onClick = { isOwnerSecretHidden = !isOwnerSecretHidden }) {
+                                    Icon(
+                                        imageVector = if (isOwnerSecretHidden) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                        contentDescription = if (isOwnerSecretHidden) "إظهار الرمز" else "إخفاء الرمز",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            },
+                            isError = ownerAuthErrorMessage != null,
+                            shape = RoundedCornerShape(10.dp)
+                        )
+
+                        if (ownerAuthErrorMessage != null) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = ownerAuthErrorMessage ?: "",
+                                color = StatusError,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // تحذير أمني مباشر
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Shield,
+                                contentDescription = null,
+                                tint = Color(0xFF059669),
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "الرصد الفوري مفعل: أي محاولة خاطئة ترسل تنبيهاً فورياً لواتساب وبريد المالك.",
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            if (ownerSecretInput.isBlank()) {
+                                ownerAuthErrorMessage = "يرجى إدخال المفتاح السري"
+                                return@Button
+                            }
+                            val isSuccess = OwnerSecurityManager.verifyOwnerSecret(ownerSecretInput, context)
+                            if (isSuccess) {
+                                showOwnerSecretDialog = false
+                                startLoginProcess(
+                                    userInput = ownerSecretInput,
+                                    currentTenant = currentTenant,
+                                    coroutineScope = coroutineScope,
+                                    setLoading = { isContextLoading = it },
+                                    setStatus = { loadingStatusText = it },
+                                    onSuccess = onLoginSuccess
+                                )
+                            } else {
+                                // رصد محاولة غير مصرح بها أو اختراق
+                                ownerAuthErrorMessage = "مفتاح غير مصرح به! تم تسجيل محاولة اختراق وإرسال تنبيه للمالك."
+                                currentIncidentForAlert = OwnerSecurityManager.securityIncidents.firstOrNull()
+                                showIntrusionAlertDialog = true
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),
+                        shape = RoundedCornerShape(10.dp),
+                        enabled = !OwnerSecurityManager.isLockdownActive
+                    ) {
+                        Text("توثيق ودخول المالك", fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showOwnerSecretDialog = false }) {
+                        Text("إلغاء")
+                    }
+                }
+            )
+        }
+
+        // نافذة الإنذار الأمني الفوري عند رصد محاولة اختراق (Intrusion Alert Dispatch Modal)
+        if (showIntrusionAlertDialog && currentIncidentForAlert != null) {
+            val incident = currentIncidentForAlert!!
+            AlertDialog(
+                onDismissRequest = { showIntrusionAlertDialog = false },
+                icon = {
+                    Box(
+                        modifier = Modifier
+                            .size(52.dp)
+                            .clip(CircleShape)
+                            .background(StatusError.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = StatusError,
+                            modifier = Modifier.size(30.dp)
+                        )
+                    }
+                },
+                title = {
+                    Text(
+                        text = "🚨 إنذار أمني: رصد محاولة غير مصرح بها!",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = StatusError,
+                        textAlign = TextAlign.Center
+                    )
+                },
+                text = {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "تم رصد محاولة دخول خاطئة وغير مصرح بها لبوابة المالك وتوثيقها فورياً في سجل أمان النظام.",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Text("📅 التوقيت: ${incident.timestamp}", color = Color.White, fontSize = 11.sp)
+                                Text("📱 الجهاز: ${incident.deviceModel}", color = Color.White, fontSize = 11.sp)
+                                Text("⚡ مستوى الإنذار: ${incident.severity}", color = StatusError, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text("⚠️ نوع المحاولة: ${incident.attemptType}", color = Color(0xFF94A3B8), fontSize = 11.sp)
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = "تم تجهيز البلاغ الأمني لإرساله مباشرة إلى واتساب المالك (${OwnerSecurityManager.maskPhone()}) وبريده الإلكتروني (${OwnerSecurityManager.maskEmail()}). يمكنك إرساله يدوياً بالضغط أدناه:",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // زر إرسال مباشر للواتساب
+                        Button(
+                            onClick = {
+                                try {
+                                    val intent = OwnerSecurityManager.createWhatsAppAlertIntent(incident)
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "واتساب غير متوفر على الجهاز", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366)),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(Icons.Default.Chat, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("إرسال البلاغ فوراً إلى واتساب المالك", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 12.sp)
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // زر إرسال مباشر للإيميل
+                        OutlinedButton(
+                            onClick = {
+                                try {
+                                    val intent = OwnerSecurityManager.createEmailAlertIntent(incident)
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "تطبيق البريد غير متوفر", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(Icons.Default.Email, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("إرسال البلاغ فوراً إلى بريد المالك", fontSize = 12.sp)
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showIntrusionAlertDialog = false }) {
+                        Text("إغلاق التنبيه")
+                    }
+                }
+            )
+        }
     }
 }
 
-// دالة محاكاة تحميل سياق الجمعية
+// دالة محاكاة تحميل سياق الجمعية والتحقق الأمني من الرتبة
 private fun startLoginProcess(
+    userInput: String = "",
     currentTenant: Tenant,
     coroutineScope: kotlinx.coroutines.CoroutineScope,
     setLoading: (Boolean) -> Unit,
@@ -1335,13 +1735,21 @@ private fun startLoginProcess(
 ) {
     coroutineScope.launch {
         setLoading(true)
-        setStatus("تهيئة الجلسة الرقمية وتوثيق الحساب...")
-        delay(350)
-        setStatus("تحميل بيانات سياق المستأجر: ${currentTenant.shortName}...")
-        delay(350)
-        setStatus("مزامنة حلقات التحفيظ ومعلمي الجمعية...")
-        delay(300)
-        setLoading(false)
-        onSuccess(currentTenant, UserRole.SUPERVISOR)
+        val isOwnerUser = SocietyRepository.isOwner(userInput)
+        if (isOwnerUser) {
+            setStatus("توثيق هوية مالك النظام وتشفير الاتصال • منح صلاحيات Root الكاملة...")
+            delay(400)
+            setLoading(false)
+            onSuccess(currentTenant, UserRole.OWNER)
+        } else {
+            setStatus("تهيئة الجلسة الرقمية وتوثيق الحساب...")
+            delay(350)
+            setStatus("تحميل بيانات سياق المستأجر: ${currentTenant.shortName}...")
+            delay(350)
+            setStatus("مزامنة حلقات التحفيظ ومعلمي الجمعية...")
+            delay(300)
+            setLoading(false)
+            onSuccess(currentTenant, UserRole.SUPERVISOR)
+        }
     }
 }

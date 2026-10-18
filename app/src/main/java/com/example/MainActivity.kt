@@ -36,6 +36,9 @@ import com.example.ui.teacherportal.TeacherPortalScreen
 import com.example.ui.teachers.TeacherManagementScreen
 import com.example.ui.planner.HifzPlannerScreen
 import com.example.ui.challenges.QuranChallengesScreen
+import com.example.ui.profile.AccountProfileAndPermissionsScreen
+import com.example.ui.owner.OwnerControlPanelScreen
+import com.example.ui.owner.OwnerFirestoreTenantsScreen
 import com.example.ui.theme.*
 import kotlinx.coroutines.launch
 
@@ -52,6 +55,9 @@ object AppDestinations {
     const val REPORTS = "reports"
     const val HIFZ_PLANNER = "hifz_planner"
     const val QURAN_CHALLENGES = "quran_challenges"
+    const val ACCOUNT_PROFILE = "account_profile"
+    const val OWNER_CONTROL = "owner_control"
+    const val OWNER_FIRESTORE_TENANTS = "owner_firestore_tenants"
 }
 
 class MainActivity : ComponentActivity() {
@@ -272,8 +278,14 @@ fun SocietyApp() {
                         onLoginSuccess = { tenant, role ->
                             currentTenant = tenant
                             activeUserRole = role
-                            navController.navigate(AppDestinations.SUPERVISOR_DASHBOARD) {
-                                popUpTo(AppDestinations.LOGIN) { inclusive = true }
+                            if (role == UserRole.OWNER) {
+                                navController.navigate(AppDestinations.OWNER_CONTROL) {
+                                    popUpTo(AppDestinations.LOGIN) { inclusive = true }
+                                }
+                            } else {
+                                navController.navigate(AppDestinations.SUPERVISOR_DASHBOARD) {
+                                    popUpTo(AppDestinations.LOGIN) { inclusive = true }
+                                }
                             }
                         },
                         onNavigateToSupervisorRegistration = {
@@ -307,6 +319,9 @@ fun SocietyApp() {
                         onNavigateToTeachers = { navController.navigate(AppDestinations.TEACHERS) },
                         onNavigateToPlanner = { navController.navigate(AppDestinations.HIFZ_PLANNER) },
                         onNavigateToChallenges = { navController.navigate(AppDestinations.QURAN_CHALLENGES) },
+                        onNavigateToProfile = { navController.navigate(AppDestinations.ACCOUNT_PROFILE) },
+                        onNavigateToOwnerControl = { navController.navigate(AppDestinations.OWNER_CONTROL) },
+                        onNavigateToFirestoreTenants = { navController.navigate(AppDestinations.OWNER_FIRESTORE_TENANTS) },
                         onSwitchTenant = {
                             navController.navigate(AppDestinations.LOGIN) {
                                 popUpTo(0)
@@ -340,6 +355,15 @@ fun SocietyApp() {
                 composable(AppDestinations.QURAN_CHALLENGES) {
                     QuranChallengesScreen(
                         onNavigateBack = { navController.popBackStack() }
+                    )
+                }
+
+                // معلومات الحساب والصلاحيات
+                composable(AppDestinations.ACCOUNT_PROFILE) {
+                    AccountProfileAndPermissionsScreen(
+                        currentTenant = currentTenant,
+                        userRole = activeUserRole,
+                        onBack = { navController.popBackStack() }
                     )
                 }
 
@@ -397,6 +421,35 @@ fun SocietyApp() {
                     ReportsAndCertificatesScreen(
                         currentTenant = currentTenant,
                         onBack = { navController.popBackStack() }
+                    )
+                }
+
+                // لوحة المالك والتحكم الشامل
+                composable(AppDestinations.OWNER_CONTROL) {
+                    OwnerControlPanelScreen(
+                        currentTenant = currentTenant,
+                        userRole = activeUserRole,
+                        onTenantSelected = { currentTenant = it },
+                        onNavigateBack = { navController.popBackStack() },
+                        onNavigateToSupervisorDashboard = { navController.navigate(AppDestinations.SUPERVISOR_DASHBOARD) },
+                        onNavigateToTeachers = { navController.navigate(AppDestinations.TEACHERS) },
+                        onNavigateToPlanner = { navController.navigate(AppDestinations.HIFZ_PLANNER) },
+                        onNavigateToChallenges = { navController.navigate(AppDestinations.QURAN_CHALLENGES) },
+                        onNavigateToAttendance = { navController.navigate(AppDestinations.ATTENDANCE) },
+                        onNavigateToParentPortal = { navController.navigate(AppDestinations.PARENT_PORTAL) },
+                        onNavigateToTeacherPortal = { navController.navigate(AppDestinations.TEACHER_PORTAL) },
+                        onNavigateToReports = { navController.navigate(AppDestinations.REPORTS) },
+                        onNavigateToFirestoreTenants = { navController.navigate(AppDestinations.OWNER_FIRESTORE_TENANTS) }
+                    )
+                }
+
+                // واجهة تحكم المالك المباشرة بقاعدة بيانات Firestore للجمعيات (حصرية ومخفية عن غيره)
+                composable(AppDestinations.OWNER_FIRESTORE_TENANTS) {
+                    OwnerFirestoreTenantsScreen(
+                        currentTenant = currentTenant,
+                        userRole = activeUserRole,
+                        onTenantSelected = { currentTenant = it },
+                        onNavigateBack = { navController.popBackStack() }
                     )
                 }
             }
