@@ -140,7 +140,7 @@ fun SupervisorDashboardScreen(
                             }
                         }
 
-                        Divider(color = BorderSubtle)
+                        HorizontalDivider(color = BorderSubtle)
                         Spacer(modifier = Modifier.height(10.dp))
 
                         // عناصر القائمة الجانبية (يتم إخفاء أقسام المالك تماماً عن غيره)
@@ -221,7 +221,7 @@ fun SupervisorDashboardScreen(
                             }
                         }
 
-                        Divider(color = BorderSubtle)
+                        HorizontalDivider(color = BorderSubtle)
                         Spacer(modifier = Modifier.height(8.dp))
 
                         // زر تبديل الجمعية وتسجيل الخروج
@@ -620,7 +620,7 @@ fun SupervisorDashboardScreen(
                                 MonthlyProgressChart()
 
                                 Spacer(modifier = Modifier.height(12.dp))
-                                Divider(color = BorderSubtle)
+                                HorizontalDivider(color = BorderSubtle)
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 Row(

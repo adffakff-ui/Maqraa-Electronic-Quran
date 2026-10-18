@@ -208,7 +208,7 @@ fun SupervisorRegistrationScreen(
                             color = TextDark
                         )
 
-                        Divider(color = BorderSubtle)
+                        HorizontalDivider(color = BorderSubtle)
 
                         // حقل: الاسم
                         Column {

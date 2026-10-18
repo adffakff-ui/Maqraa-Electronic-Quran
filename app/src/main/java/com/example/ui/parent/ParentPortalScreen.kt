@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -323,7 +324,7 @@ fun ParentPortalScreen(
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
                                         Row(modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(imageVector = Icons.Default.ChatBubble, contentDescription = null, tint = EmeraldDark, modifier = Modifier.size(16.dp))
+                                            Icon(imageVector = Icons.Filled.ChatBubble, contentDescription = null, tint = EmeraldDark, modifier = Modifier.size(16.dp))
                                             Spacer(modifier = Modifier.width(6.dp))
                                             Text(
                                                 text = "ملاحظة المعلم: ${rec.teacherFeedback}",

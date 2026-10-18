@@ -746,7 +746,7 @@ fun TeacherCard(
             }
 
             Spacer(modifier = Modifier.height(10.dp))
-            Divider(color = BorderSubtle.copy(alpha = 0.7f))
+            HorizontalDivider(color = BorderSubtle.copy(alpha = 0.7f))
             Spacer(modifier = Modifier.height(8.dp))
 
             // أزرار: عرض الملف | تعيين لحلقة | إيقاف الحساب
@@ -886,7 +886,7 @@ fun TeacherDetailPane(
             }
         }
 
-        Divider(color = BorderSubtle)
+        HorizontalDivider(color = BorderSubtle)
 
         // محتوى التبويب المختار
         Box(

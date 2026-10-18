@@ -207,11 +207,18 @@ ${if (isLockdownActive) "3. تم تجميد البوابة وتفعيل وضع �
 
     // إرسال تنبيه تلقائي أو إشعار فوري للمالك
     fun triggerSecurityNotice(context: Context, incident: SecurityIncident) {
-        Toast.makeText(
-            context,
-            "⚠️ رصد محاولة غير مصرح بها! تم إرسال بلاغ أمني عاجل للمالك.",
-            Toast.LENGTH_LONG
-        ).show()
+        // محاولة إرسال تنبيه عبر واتساب تلقائياً
+        try {
+            val intent = createWhatsAppAlertIntent(incident)
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            // في حال فشل الواتساب، يظهر التنبيه العادي
+            Toast.makeText(
+                context,
+                "⚠️ رصد محاولة غير مصرح بها! فشل إرسال تنبيه واتساب التلقائي.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 
     // إرسال بلاغ تجريبي من قبل المالك للتحقق من الاتصال

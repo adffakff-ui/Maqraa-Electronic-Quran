@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -249,7 +250,7 @@ fun TeacherPortalScreen(
                             }
 
                             Spacer(modifier = Modifier.height(12.dp))
-                            Divider(color = BorderSubtle)
+                            HorizontalDivider(color = BorderSubtle)
                             Spacer(modifier = Modifier.height(10.dp))
 
                             // قائمة الطلاب المختصرة + زر: تسجيل حضور سريع
@@ -438,7 +439,7 @@ fun TeacherPortalScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(imageVector = Icons.Default.Chat, contentDescription = null, tint = SocietyBluePrimary)
+                                Icon(imageVector = Icons.AutoMirrored.Filled.Chat, contentDescription = null, tint = SocietyBluePrimary)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column {
                                     Text(

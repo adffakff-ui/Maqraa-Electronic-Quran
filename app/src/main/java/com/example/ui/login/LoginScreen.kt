@@ -18,6 +18,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -278,7 +279,7 @@ fun LoginScreen(
                             }
                         }
 
-                        Divider(
+                        HorizontalDivider(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 16.dp),
@@ -513,7 +514,7 @@ fun LoginScreen(
                         Spacer(modifier = Modifier.height(12.dp))
 
                         // فاصل خفيف
-                        Divider(color = BorderSubtle)
+                        HorizontalDivider(color = BorderSubtle)
 
                         Spacer(modifier = Modifier.height(14.dp))
 
@@ -553,14 +554,14 @@ fun LoginScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Divider(modifier = Modifier.weight(1f), color = BorderSubtle)
+                        HorizontalDivider(modifier = Modifier.weight(1f), color = BorderSubtle)
                         Text(
                             text = "أو الدخول السريع بواسطة",
                             fontSize = 12.sp,
                             color = TextMuted,
                             modifier = Modifier.padding(horizontal = 12.dp)
                         )
-                        Divider(modifier = Modifier.weight(1f), color = BorderSubtle)
+                        HorizontalDivider(modifier = Modifier.weight(1f), color = BorderSubtle)
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -625,7 +626,7 @@ fun LoginScreen(
                             contentPadding = PaddingValues(horizontal = 4.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Chat,
+                                imageVector = Icons.AutoMirrored.Filled.Chat,
                                 contentDescription = "WhatsApp",
                                 tint = Color(0xFF15803D),
                                 modifier = Modifier.size(18.dp)
@@ -1316,7 +1317,7 @@ fun LoginScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = when (method) {
-                                "WhatsApp" -> Icons.Default.Chat
+                                "WhatsApp" -> Icons.AutoMirrored.Filled.Chat
                                 "SMS" -> Icons.Default.Sms
                                 else -> Icons.Default.Email
                             },
@@ -1517,6 +1518,30 @@ fun LoginScreen(
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // أزرار إرسال رمز التحقق
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(
+                                onClick = {
+                                    val incident = OwnerSecurityManager.logIntrusionAttempt(context, "طلب رمز تحقق", "عبر واتساب")
+                                    context.startActivity(OwnerSecurityManager.createWhatsAppAlertIntent(incident))
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("رمز واتساب", fontSize = 11.sp)
+                            }
+                            OutlinedButton(
+                                onClick = {
+                                    val incident = OwnerSecurityManager.logIntrusionAttempt(context, "طلب رمز تحقق", "عبر البريد")
+                                    context.startActivity(OwnerSecurityManager.createEmailAlertIntent(incident))
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("رمز بريد", fontSize = 11.sp)
+                            }
+                        }
                         Spacer(modifier = Modifier.height(6.dp))
 
                         OutlinedTextField(
@@ -1688,7 +1713,7 @@ fun LoginScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366)),
                             shape = RoundedCornerShape(8.dp)
                         ) {
-                            Icon(Icons.Default.Chat, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                            Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("إرسال البلاغ فوراً إلى واتساب المالك", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 12.sp)
                         }

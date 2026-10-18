@@ -181,7 +181,7 @@ fun AppNavigationDrawerSheet(
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            Divider(color = BorderSubtle, thickness = 1.dp, modifier = Modifier.padding(horizontal = 16.dp))
+            HorizontalDivider(color = BorderSubtle, thickness = 1.dp, modifier = Modifier.padding(horizontal = 16.dp))
             Spacer(modifier = Modifier.height(8.dp))
 
             // ==========================================
@@ -239,7 +239,7 @@ fun AppNavigationDrawerSheet(
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
-                Divider(color = BorderSubtle.copy(alpha = 0.7f), thickness = 1.dp)
+                HorizontalDivider(color = BorderSubtle.copy(alpha = 0.7f), thickness = 1.dp)
                 Spacer(modifier = Modifier.height(6.dp))
 
                 // القسم 2: البوابات والتسميع الصوتي
@@ -285,7 +285,7 @@ fun AppNavigationDrawerSheet(
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
-                Divider(color = BorderSubtle.copy(alpha = 0.7f), thickness = 1.dp)
+                HorizontalDivider(color = BorderSubtle.copy(alpha = 0.7f), thickness = 1.dp)
                 Spacer(modifier = Modifier.height(6.dp))
 
                 // القسم 3: الإدارة والحساب
@@ -307,7 +307,7 @@ fun AppNavigationDrawerSheet(
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            Divider(color = BorderSubtle, thickness = 1.dp, modifier = Modifier.padding(horizontal = 16.dp))
+            HorizontalDivider(color = BorderSubtle, thickness = 1.dp, modifier = Modifier.padding(horizontal = 16.dp))
             Spacer(modifier = Modifier.height(8.dp))
 
             // ==========================================

@@ -372,7 +372,7 @@ fun ReportsAndCertificatesScreen(
                                     }
                                 }
 
-                                Divider(color = BorderSubtle)
+                                HorizontalDivider(color = BorderSubtle)
 
                                 eligibleStudents.forEach { st ->
                                     Card(

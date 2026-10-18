@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -230,7 +231,7 @@ fun OwnerControlPanelScreen(
                         }
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Chat,
+                            imageVector = Icons.AutoMirrored.Filled.Chat,
                             contentDescription = "واتساب المالك",
                             tint = Color(0xFF25D366)
                         )
@@ -367,12 +368,11 @@ fun OwnerControlPanelScreen(
                 }
             }
 
-            // Tabs Selector (5 Tabs)
-            ScrollableTabRow(
+            // Tabs Selector (6 Tabs)
+            TabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.primary,
-                edgePadding = 8.dp
+                contentColor = MaterialTheme.colorScheme.primary
             ) {
                 Tab(
                     selected = selectedTab == 0,
@@ -1436,7 +1436,7 @@ fun OwnerControlPanelScreen(
                                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366)),
                                             shape = RoundedCornerShape(10.dp)
                                         ) {
-                                            Icon(Icons.Default.Chat, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                                            Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
                                             Spacer(modifier = Modifier.width(6.dp))
                                             Text("تجربة الواتساب", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
                                         }
@@ -1561,7 +1561,7 @@ fun OwnerControlPanelScreen(
                                                 modifier = Modifier.weight(1f),
                                                 shape = RoundedCornerShape(8.dp)
                                             ) {
-                                                Icon(Icons.Default.Chat, contentDescription = null, tint = Color(0xFF25D366), modifier = Modifier.size(14.dp))
+                                                Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = null, tint = Color(0xFF25D366), modifier = Modifier.size(14.dp))
                                                 Spacer(modifier = Modifier.width(4.dp))
                                                 Text("إرسال لواتساب", fontSize = 10.sp)
                                             }

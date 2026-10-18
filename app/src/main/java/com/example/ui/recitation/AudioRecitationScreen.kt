@@ -548,7 +548,7 @@ fun AudioRecitationScreen(
                                 }
                             }
 
-                            Divider(color = BorderSubtle)
+                            HorizontalDivider(color = BorderSubtle)
 
                             Text(
                                 text = "ملاحظات وتنبيهات الآيات ومخارج الحروف:",

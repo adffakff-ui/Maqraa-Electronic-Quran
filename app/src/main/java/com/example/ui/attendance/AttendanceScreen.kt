@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -622,7 +623,7 @@ fun AttendanceStudentRow(
                 // أيقونة الملاحظة
                 IconButton(onClick = onNoteClick, modifier = Modifier.size(32.dp)) {
                     Icon(
-                        imageVector = if (student.note.isNotBlank()) Icons.Default.ChatBubble else Icons.Outlined.ChatBubbleOutline,
+                        imageVector = if (student.note.isNotBlank()) Icons.Filled.ChatBubble else Icons.Outlined.ChatBubbleOutline,
                         contentDescription = "ملاحظة",
                         tint = if (student.note.isNotBlank()) SocietyBluePrimary else TextMuted,
                         modifier = Modifier.size(18.dp)

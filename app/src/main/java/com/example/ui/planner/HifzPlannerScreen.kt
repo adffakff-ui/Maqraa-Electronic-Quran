@@ -312,7 +312,7 @@ fun HifzPlannerScreen(
                                         }
 
                                         Spacer(modifier = Modifier.height(10.dp))
-                                        Divider(color = BorderSubtle)
+                                        HorizontalDivider(color = BorderSubtle)
                                         Spacer(modifier = Modifier.height(10.dp))
 
                                         Row(

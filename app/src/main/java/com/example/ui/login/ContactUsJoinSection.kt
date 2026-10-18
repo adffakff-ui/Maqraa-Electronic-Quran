@@ -313,7 +313,7 @@ fun ContactUsJoinSection(
                         .fillMaxWidth()
                         .padding(top = 14.dp)
                 ) {
-                    Divider(color = BorderSubtle, thickness = 1.dp)
+                    HorizontalDivider(color = BorderSubtle, thickness = 1.dp)
                     Spacer(modifier = Modifier.height(14.dp))
 
                     // Error Message Banner

@@ -429,7 +429,7 @@ fun CircleDetailScreen(
                                     }
                                 }
 
-                                Divider(color = BorderSubtle, modifier = Modifier.padding(vertical = 4.dp))
+                                HorizontalDivider(color = BorderSubtle, modifier = Modifier.padding(vertical = 4.dp))
 
                                 // جدول الطلاب
                                 LazyColumn(
@@ -599,7 +599,7 @@ fun CircleDetailScreen(
                                 InfoCardItem("رابط القاعة / زوم:", ring.zoomLink, Icons.Outlined.VideoCall)
                                 InfoCardItem("المسار والمستوى:", "${ring.level} • ${ring.currentJuz}", Icons.Outlined.MenuBook)
 
-                                Divider(color = BorderSubtle)
+                                HorizontalDivider(color = BorderSubtle)
 
                                 Text(text = "وصف المحتوى والأهداف:", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextDark)
                                 Text(
@@ -609,7 +609,7 @@ fun CircleDetailScreen(
                                     lineHeight = 18.sp
                                 )
 
-                                Divider(color = BorderSubtle)
+                                HorizontalDivider(color = BorderSubtle)
 
                                 // سعة الحلقة للمستخدمين
                                 Card(
@@ -717,7 +717,7 @@ fun CircleDetailScreen(
                                 }
 
                                 Spacer(modifier = Modifier.height(10.dp))
-                                Divider(color = BorderSubtle)
+                                HorizontalDivider(color = BorderSubtle)
                                 Spacer(modifier = Modifier.height(4.dp))
 
                                 Text(text = "الخط الزمني للواجبات والاختبارات", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TextDark)
