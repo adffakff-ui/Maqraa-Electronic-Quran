@@ -220,7 +220,7 @@ fun SupervisorRegistrationScreen(
                                     fullName = it
                                     errorMessage = null
                                 },
-                                placeholder = { Text("مثال: أ. عبد الرحمن بن صالح السعيد") },
+                                placeholder = { Text("") },
                                 leadingIcon = {
                                     Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = SocietyBluePrimary)
                                 },
@@ -242,7 +242,7 @@ fun SupervisorRegistrationScreen(
                                     email = it
                                     errorMessage = null
                                 },
-                                placeholder = { Text("supervisor@society.org.sa") },
+                                placeholder = { Text("") },
                                 leadingIcon = {
                                     Icon(imageVector = Icons.Default.Email, contentDescription = null, tint = SocietyBluePrimary)
                                 },
@@ -265,7 +265,7 @@ fun SupervisorRegistrationScreen(
                                     phone = it
                                     errorMessage = null
                                 },
-                                placeholder = { Text("05xxxxxxxx") },
+                                placeholder = { Text("") },
                                 leadingIcon = {
                                     Icon(imageVector = Icons.Default.Phone, contentDescription = null, tint = SocietyBluePrimary)
                                 },
@@ -349,7 +349,7 @@ fun SupervisorRegistrationScreen(
                             OutlinedTextField(
                                 value = department,
                                 onValueChange = { department = it },
-                                placeholder = { Text("مثال: إدارة الشؤون التعليمية والتحفيظ") },
+                                placeholder = { Text(":") },
                                 leadingIcon = {
                                     Icon(imageVector = Icons.Default.Badge, contentDescription = null, tint = SocietyBluePrimary)
                                 },
@@ -368,7 +368,7 @@ fun SupervisorRegistrationScreen(
                             OutlinedTextField(
                                 value = nationalId,
                                 onValueChange = { nationalId = it },
-                                placeholder = { Text("10xxxxxxxx") },
+                                placeholder = { Text("") },
                                 leadingIcon = {
                                     Icon(imageVector = Icons.Default.PermIdentity, contentDescription = null, tint = SocietyBluePrimary)
                                 },
