@@ -37,6 +37,7 @@ import com.example.ui.teachers.TeacherManagementScreen
 import com.example.ui.planner.HifzPlannerScreen
 import com.example.ui.challenges.QuranChallengesScreen
 import com.example.ui.profile.AccountProfileAndPermissionsScreen
+import com.example.ui.profile.RolePermissionManagementScreen
 import com.example.ui.backup.TenantBackupRestoreScreen
 import com.example.ui.owner.OwnerControlPanelScreen
 import com.example.ui.owner.OwnerFirestoreTenantsScreen
@@ -60,6 +61,7 @@ object AppDestinations {
     const val OWNER_CONTROL = "owner_control"
     const val OWNER_FIRESTORE_TENANTS = "owner_firestore_tenants"
     const val TENANT_BACKUP_RESTORE = "tenant_backup_restore"
+    const val ROLE_PERMISSIONS = "role_permissions"
 }
 
 class MainActivity : ComponentActivity() {
@@ -369,6 +371,15 @@ fun SocietyApp() {
                     AccountProfileAndPermissionsScreen(
                         currentTenant = currentTenant,
                         userRole = activeUserRole,
+                        onNavigateToRolePermissions = { navController.navigate(AppDestinations.ROLE_PERMISSIONS) },
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+
+                // إدارة صلاحيات المستخدمين (RBAC)
+                composable(AppDestinations.ROLE_PERMISSIONS) {
+                    RolePermissionManagementScreen(
+                        currentTenant = currentTenant,
                         onBack = { navController.popBackStack() }
                     )
                 }

@@ -29,6 +29,7 @@ import com.example.data.UserRole
 fun AccountProfileAndPermissionsScreen(
     currentTenant: Tenant,
     userRole: UserRole = UserRole.SUPERVISOR,
+    onNavigateToRolePermissions: (() -> Unit)? = null,
     onBack: () -> Unit
 ) {
     var showUpdateDialog by remember { mutableStateOf<String?>(null) }
@@ -61,6 +62,55 @@ fun AccountProfileAndPermissionsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // RBAC Management Card
+            if (onNavigateToRolePermissions != null) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onNavigateToRolePermissions() },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+                        border = BorderStroke(1.dp, Color(0xFFFFB300))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(42.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFFFFB300).copy(alpha = 0.2f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(imageVector = Icons.Default.AdminPanelSettings, contentDescription = null, tint = Color(0xFFFFB300))
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = "إدارة صلاحيات المستخدمين (RBAC)",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp,
+                                        color = Color.White
+                                    )
+                                    Text(
+                                        text = "تخصيص صلاحيات العرض والتعديل لكل مستخدم في النظام",
+                                        fontSize = 11.sp,
+                                        color = Color(0xFF94A3B8)
+                                    )
+                                }
+                            }
+                            Icon(imageVector = Icons.Default.ArrowForward, contentDescription = null, tint = Color(0xFFFFB300))
+                        }
+                    }
+                }
+            }
+
             // Header Info Card (Phone & Account Number)
             item {
                 Card(
