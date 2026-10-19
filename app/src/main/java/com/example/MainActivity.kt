@@ -87,10 +87,13 @@ fun SocietyApp() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Hide bottom bar on login and supervisor registration
-    val showBottomBar = currentRoute != null &&
-            currentRoute != AppDestinations.LOGIN &&
-            currentRoute != AppDestinations.SUPERVISOR_REGISTRATION
+    // Only show bottom navigation bar on primary supervisor tabs, giving full screen space to Owner and dedicated tools
+    val showBottomBar = currentRoute in listOf(
+        AppDestinations.SUPERVISOR_DASHBOARD,
+        AppDestinations.TEACHERS,
+        AppDestinations.CIRCLE_DETAIL,
+        AppDestinations.ATTENDANCE
+    )
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()

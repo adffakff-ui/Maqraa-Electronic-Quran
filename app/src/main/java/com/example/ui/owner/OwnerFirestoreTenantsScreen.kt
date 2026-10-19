@@ -354,6 +354,7 @@ fun OwnerFirestoreTenantsScreen(
                 modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 14.dp),
+                contentPadding = PaddingValues(bottom = 32.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(filteredList, key = { it.id }) { tenant ->

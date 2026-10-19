@@ -277,154 +277,176 @@ fun OwnerControlPanelScreen(
                 .padding(paddingValues)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            // Owner Profile Hero Banner with verified badge
+            val ownerTabs = listOf(
+                Pair("الجمعيات (${allTenants.size})", Icons.Outlined.Apartment),
+                Pair("المعلمون والصلاحيات", Icons.Outlined.AdminPanelSettings),
+                Pair("الحلقات والطلاب", Icons.Outlined.MenuBook),
+                Pair("إدارة البيانات والنسخ", Icons.Outlined.SettingsBackupRestore),
+                Pair("بوابات God Mode", Icons.Outlined.Launch),
+                Pair("درع الأمان (${OwnerSecurityManager.securityIncidents.size})", Icons.Default.Security),
+                Pair("مؤشر التسجيلات", Icons.Default.BarChart)
+            )
+
+            // شريط هيدر المالك فائق الصغر والأناقة (Compact Owner Strip)
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(12.dp),
-                shape = RoundedCornerShape(18.dp),
+                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                Column(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(14.dp)
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(46.dp)
-                                    .clip(CircleShape)
-                                    .background(GoldenAmber.copy(alpha = 0.25f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.WorkspacePremium,
-                                    contentDescription = null,
-                                    tint = GoldenAmber,
-                                    modifier = Modifier.size(26.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(CircleShape)
+                                .background(GoldenAmber.copy(alpha = 0.25f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.WorkspacePremium,
+                                contentDescription = null,
+                                tint = GoldenAmber,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
                                     text = "صاحب التطبيق والمالك الحصري (Root)",
                                     color = Color.White,
-                                    style = MaterialTheme.typography.titleMedium,
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold
                                 )
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = GoldenAmber.copy(alpha = 0.2f)
+                                ) {
                                     Text(
-                                        text = if (isSensitiveInfoRevealed) "${OwnerSecurityManager.OWNER_EMAIL} • واتساب: ${OwnerSecurityManager.OWNER_PHONE}" else "${OwnerSecurityManager.maskEmail()} • واتساب: ${OwnerSecurityManager.maskPhone()}",
-                                        color = Color(0xFF94A3B8),
-                                        style = MaterialTheme.typography.bodySmall
+                                        text = "تحكم 100%",
+                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                                        color = GoldenAmber,
+                                        fontSize = 8.sp,
+                                        fontWeight = FontWeight.Bold
                                     )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    IconButton(
-                                        onClick = { isSensitiveInfoRevealed = !isSensitiveInfoRevealed },
-                                        modifier = Modifier.size(20.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = if (isSensitiveInfoRevealed) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                            contentDescription = "إظهار/إخفاء البيانات الحساسة",
-                                            tint = GoldenAmber,
-                                            modifier = Modifier.size(14.dp)
-                                        )
-                                    }
                                 }
                             }
-                        }
-
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = GoldenAmber.copy(alpha = 0.2f)
-                        ) {
                             Text(
-                                text = "تحكم شامل 100%",
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                color = GoldenAmber,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold
+                                text = "${allTenants.size} جمعيات • $totalRings حلقة • $totalStudents طالب • $totalTeachers معلم",
+                                color = Color(0xFF94A3B8),
+                                fontSize = 9.sp
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
-                    HorizontalDivider(color = Color(0xFF334155))
-                    Spacer(modifier = Modifier.height(8.dp))
+                    // قائمة منسدلة سريعة للتنقل المباشر بين جميع التبويبات بنقرة واحدة
+                    var showTabsDropdown by remember { mutableStateOf(false) }
+                    Box {
+                        OutlinedButton(
+                            onClick = { showTabsDropdown = true },
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = GoldenAmber),
+                            border = BorderStroke(1.dp, GoldenAmber.copy(alpha = 0.5f)),
+                            modifier = Modifier.height(28.dp)
+                        ) {
+                            Icon(Icons.Default.Menu, contentDescription = null, modifier = Modifier.size(12.dp))
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text("التبويبات (${selectedTab + 1}/7)", fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                        }
 
-                    // Global System Metrics
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        OwnerMetricItem("الجمعيات", "${allTenants.size}", Icons.Outlined.AccountBalance)
-                        OwnerMetricItem("الحلقات", "$totalRings", Icons.AutoMirrored.Filled.MenuBook)
-                        OwnerMetricItem("الطلاب", "$totalStudents", Icons.Outlined.Groups)
-                        OwnerMetricItem("المعلمون", "$totalTeachers", Icons.Outlined.School)
+                        DropdownMenu(
+                            expanded = showTabsDropdown,
+                            onDismissRequest = { showTabsDropdown = false }
+                        ) {
+                            ownerTabs.forEachIndexed { index, tab ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = tab.first,
+                                            fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (selectedTab == index) GoldenAmber else Color.Unspecified,
+                                            fontSize = 11.sp
+                                        )
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = tab.second,
+                                            contentDescription = null,
+                                            tint = if (selectedTab == index) GoldenAmber else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    },
+                                    onClick = {
+                                        selectedTab = index
+                                        showTabsDropdown = false
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }
 
-            // Tabs Selector (6 Tabs)
+            // شريط تبويبات مدمج وقابل للتمرير بارتفاع مضغوط (40dp) لترك أقصى مساحة للمحتوى
             ScrollableTabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.primary,
-                edgePadding = 8.dp
+                contentColor = GoldenAmber,
+                edgePadding = 4.dp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(40.dp)
             ) {
-                Tab(
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
-                    text = { Text("الجمعيات (${allTenants.size})", fontWeight = FontWeight.Bold) },
-                    icon = { Icon(Icons.Outlined.Apartment, contentDescription = null) }
-                )
-                Tab(
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
-                    text = { Text("المعلمون والصلاحيات", fontWeight = FontWeight.Bold) },
-                    icon = { Icon(Icons.Outlined.AdminPanelSettings, contentDescription = null) }
-                )
-                Tab(
-                    selected = selectedTab == 2,
-                    onClick = { selectedTab = 2 },
-                    text = { Text("الحلقات والطلاب", fontWeight = FontWeight.Bold) },
-                    icon = { Icon(Icons.Outlined.MenuBook, contentDescription = null) }
-                )
-                Tab(
-                    selected = selectedTab == 3,
-                    onClick = { selectedTab = 3 },
-                    text = { Text("تهيئة وإدارة البيانات", fontWeight = FontWeight.Bold) },
-                    icon = { Icon(Icons.Outlined.SettingsBackupRestore, contentDescription = null) }
-                )
-                Tab(
-                    selected = selectedTab == 4,
-                    onClick = { selectedTab = 4 },
-                    text = { Text("بوابات التطبيق (God Mode)", fontWeight = FontWeight.Bold) },
-                    icon = { Icon(Icons.Outlined.Launch, contentDescription = null) }
-                )
-                Tab(
-                    selected = selectedTab == 5,
-                    onClick = { selectedTab = 5 },
-                    text = { Text("درع الأمان (${OwnerSecurityManager.securityIncidents.size})", fontWeight = FontWeight.Bold) },
-                    icon = { Icon(Icons.Default.Security, contentDescription = null) }
-                )
-                Tab(
-                    selected = selectedTab == 6,
-                    onClick = { selectedTab = 6 },
-                    text = { Text("مؤشر التسجيلات (نشط/معلق)", fontWeight = FontWeight.Bold) },
-                    icon = { Icon(Icons.Default.BarChart, contentDescription = null) }
-                )
+                ownerTabs.forEachIndexed { index, tabItem ->
+                    Tab(
+                        selected = selectedTab == index,
+                        onClick = { selectedTab = index },
+                        text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = tabItem.second,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(13.dp),
+                                    tint = if (selectedTab == index) GoldenAmber else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = tabItem.first,
+                                    fontSize = 11.sp,
+                                    fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (selectedTab == index) GoldenAmber else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1
+                                )
+                            }
+                        }
+                    )
+                }
             }
 
-            // Tab Content
-            when (selectedTab) {
+            // حاوية المحتوى المشغولة بنسبة 100% من المساحة المتبقية لمنع أي اقتطاع للشاشة
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
+                when (selectedTab) {
                 0 -> {
                     // ==========================================
                     // تبويب 0: إدارة الجمعيات والمستأجرين بالكامل
@@ -493,6 +515,7 @@ fun OwnerControlPanelScreen(
 
                         LazyColumn(
                             modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(bottom = 32.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             items(filteredTenants) { tenant ->
@@ -617,7 +640,8 @@ fun OwnerControlPanelScreen(
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(12.dp),
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        contentPadding = PaddingValues(bottom = 32.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         item {
@@ -904,6 +928,7 @@ fun OwnerControlPanelScreen(
 
                             LazyColumn(
                                 modifier = Modifier.weight(1f),
+                                contentPadding = PaddingValues(bottom = 32.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 items(allRings) { ring ->
@@ -972,6 +997,7 @@ fun OwnerControlPanelScreen(
 
                             LazyColumn(
                                 modifier = Modifier.weight(1f),
+                                contentPadding = PaddingValues(bottom = 32.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 items(allStudents.take(30)) { student ->
@@ -1017,8 +1043,9 @@ fun OwnerControlPanelScreen(
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(14.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        contentPadding = PaddingValues(bottom = 36.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         // النسخ الاحتياطي السحابي واستعادة الجمعية عبر Firebase Storage
                         item {
@@ -1318,7 +1345,8 @@ fun OwnerControlPanelScreen(
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(14.dp),
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        contentPadding = PaddingValues(bottom = 32.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         item {
@@ -1378,8 +1406,9 @@ fun OwnerControlPanelScreen(
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(14.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        contentPadding = PaddingValues(bottom = 32.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         // 1. بطاقة درع الأمان المركزي والحماية المشفرة
                         item {
@@ -1705,7 +1734,7 @@ fun OwnerControlPanelScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(14.dp)
+                            .padding(horizontal = 10.dp, vertical = 6.dp)
                             .verticalScroll(rememberScrollState())
                     ) {
                         ActiveVsPendingRegistrationsDashboard(
@@ -1715,10 +1744,12 @@ fun OwnerControlPanelScreen(
                                 onTenantSelected(tenant)
                             }
                         )
+                        Spacer(modifier = Modifier.height(32.dp))
                     }
                 }
             }
         }
+    }
 
         // ==========================================
         // حوارات التأكيد والإضافة

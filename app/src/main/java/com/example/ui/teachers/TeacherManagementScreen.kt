@@ -48,9 +48,9 @@ fun TeacherManagementScreen(
     var selectedStatusFilter by remember { mutableStateOf<TeacherStatus?>(null) } // null = All
     var filterAvailableOnly by remember { mutableStateOf(false) }
 
-    // Selected Teacher for the Detailed Column / Sheet
     var selectedTeacher by remember { mutableStateOf<Teacher?>(teachersList.firstOrNull()) }
     var selectedDetailTab by remember { mutableStateOf(0) } // 0: Profile, 1: Rings, 2: Leaves, 3: Audit
+    var mobileViewTab by remember { mutableStateOf(0) } // 0: list, 1: detail (adaptive mobile)
 
     // Dialogs
     var showAddTeacherDialog by remember { mutableStateOf(false) }
@@ -281,96 +281,227 @@ fun TeacherManagementScreen(
                 // ==========================================
                 // المحتوى الرئيسي: قائمة المعلمين + العمود التفصيلي
                 // ==========================================
-                Row(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    // قائمة / Grid بطاقات المعلمين
-                    LazyColumn(
-                        modifier = Modifier
-                            .weight(1.3f)
-                            .fillMaxHeight(),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        if (filteredTeachers.isEmpty()) {
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(40.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.PersonOff,
-                                            contentDescription = null,
-                                            tint = TextSubtle,
-                                            modifier = Modifier.size(48.dp)
-                                        )
-                                        Spacer(modifier = Modifier.height(8.dp))
+                BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                    val isCompact = maxWidth < 650.dp
+                    if (isCompact) {
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            TabRow(
+                                selectedTabIndex = mobileViewTab,
+                                containerColor = Color.White,
+                                contentColor = SocietyBluePrimary,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(40.dp)
+                            ) {
+                                Tab(
+                                    selected = mobileViewTab == 0,
+                                    onClick = { mobileViewTab = 0 },
+                                    text = { Text("قائمة المعلمين (${filteredTeachers.size})", fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                                )
+                                Tab(
+                                    selected = mobileViewTab == 1,
+                                    onClick = { mobileViewTab = 1 },
+                                    text = {
                                         Text(
-                                            text = "لا يوجد معلمون مطابقون لمعايير البحث",
-                                            fontSize = 13.sp,
-                                            color = TextMuted
+                                            text = selectedTeacher?.name?.let { "تفاصيل: $it" } ?: "تفاصيل المعلم",
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
                                         )
+                                    }
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            if (mobileViewTab == 0) {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentPadding = PaddingValues(bottom = 32.dp),
+                                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    if (filteredTeachers.isEmpty()) {
+                                        item {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(40.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                    Icon(
+                                                        imageVector = Icons.Outlined.PersonOff,
+                                                        contentDescription = null,
+                                                        tint = TextSubtle,
+                                                        modifier = Modifier.size(48.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.height(8.dp))
+                                                    Text(
+                                                        text = "لا يوجد معلمون مطابقون لمعايير البحث",
+                                                        fontSize = 13.sp,
+                                                        color = TextMuted
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    items(filteredTeachers, key = { it.id }) { teacher ->
+                                        val isSelected = selectedTeacher?.id == teacher.id
+                                        TeacherCard(
+                                            teacher = teacher,
+                                            isSelected = isSelected,
+                                            onSelect = {
+                                                selectedTeacher = teacher
+                                                mobileViewTab = 1
+                                            },
+                                            onAssignToRing = { assigningTeacherToRing = teacher },
+                                            onToggleStatus = {
+                                                teachersList = teachersList.map {
+                                                    if (it.id == teacher.id) {
+                                                        val newStatus = if (it.status == TeacherStatus.ACTIVE) TeacherStatus.SUSPENDED else TeacherStatus.ACTIVE
+                                                        val updated = it.copy(status = newStatus)
+                                                        if (selectedTeacher?.id == it.id) selectedTeacher = updated
+                                                        updated
+                                                    } else it
+                                                }
+                                                snackbarMessage = if (teacher.status == TeacherStatus.ACTIVE)
+                                                    "تم إيقاف حساب ${teacher.name} مؤقتاً"
+                                                else
+                                                    "تم تنشيط حساب ${teacher.name} بنجاح"
+                                            }
+                                        )
+                                    }
+                                }
+                            } else {
+                                if (selectedTeacher != null) {
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .testTag("teacher_detail_column"),
+                                        shape = RoundedCornerShape(16.dp),
+                                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                                        border = BorderStroke(1.dp, BorderSubtle),
+                                        elevation = CardDefaults.cardElevation(2.dp)
+                                    ) {
+                                        TeacherDetailPane(
+                                            teacher = selectedTeacher!!,
+                                            selectedTab = selectedDetailTab,
+                                            onTabSelected = { selectedDetailTab = it },
+                                            onAssignRingClick = { assigningTeacherToRing = selectedTeacher },
+                                            onRemoveRing = { ringName ->
+                                                teachersList = teachersList.map {
+                                                    if (it.id == selectedTeacher!!.id) {
+                                                        val updated = it.copy(assignedRings = it.assignedRings.filter { r -> r != ringName })
+                                                        selectedTeacher = updated
+                                                        updated
+                                                    } else it
+                                                }
+                                                snackbarMessage = "تم إلغاء تعيين $ringName"
+                                            }
+                                        )
+                                    }
+                                } else {
+                                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                        Text("يرجى اختيار معلم من القائمة لعرض تفاصيله", color = TextMuted)
                                     }
                                 }
                             }
                         }
-
-                        items(filteredTeachers, key = { it.id }) { teacher ->
-                            val isSelected = selectedTeacher?.id == teacher.id
-                            TeacherCard(
-                                teacher = teacher,
-                                isSelected = isSelected,
-                                onSelect = { selectedTeacher = teacher },
-                                onAssignToRing = { assigningTeacherToRing = teacher },
-                                onToggleStatus = {
-                                    teachersList = teachersList.map {
-                                        if (it.id == teacher.id) {
-                                            val newStatus = if (it.status == TeacherStatus.ACTIVE) TeacherStatus.SUSPENDED else TeacherStatus.ACTIVE
-                                            val updated = it.copy(status = newStatus)
-                                            if (selectedTeacher?.id == it.id) selectedTeacher = updated
-                                            updated
-                                        } else it
-                                    }
-                                    snackbarMessage = if (teacher.status == TeacherStatus.ACTIVE)
-                                        "تم إيقاف حساب ${teacher.name} مؤقتاً"
-                                    else
-                                        "تم تنشيط حساب ${teacher.name} بنجاح"
-                                }
-                            )
-                        }
-                    }
-
-                    // العمود التفصيلي (يظهر عند اختيار معلم)
-                    if (selectedTeacher != null) {
-                        Card(
-                            modifier = Modifier
-                                .weight(1.2f)
-                                .fillMaxHeight()
-                                .testTag("teacher_detail_column"),
-                            shape = RoundedCornerShape(18.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            border = BorderStroke(1.dp, BorderSubtle),
-                            elevation = CardDefaults.cardElevation(2.dp)
+                    } else {
+                        // Wide screen / Tablet: side-by-side Row
+                        Row(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalArrangement = Arrangement.spacedBy(14.dp)
                         ) {
-                            TeacherDetailPane(
-                                teacher = selectedTeacher!!,
-                                selectedTab = selectedDetailTab,
-                                onTabSelected = { selectedDetailTab = it },
-                                onAssignRingClick = { assigningTeacherToRing = selectedTeacher },
-                                onRemoveRing = { ringName ->
-                                    teachersList = teachersList.map {
-                                        if (it.id == selectedTeacher!!.id) {
-                                            val updated = it.copy(assignedRings = it.assignedRings.filter { r -> r != ringName })
-                                            selectedTeacher = updated
-                                            updated
-                                        } else it
+                            LazyColumn(
+                                modifier = Modifier
+                                    .weight(1.3f)
+                                    .fillMaxHeight(),
+                                contentPadding = PaddingValues(bottom = 32.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                if (filteredTeachers.isEmpty()) {
+                                    item {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(40.dp),
+                                                contentAlignment = Alignment.Center
+                                        ) {
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Icon(
+                                                    imageVector = Icons.Outlined.PersonOff,
+                                                    contentDescription = null,
+                                                    tint = TextSubtle,
+                                                    modifier = Modifier.size(48.dp)
+                                                )
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                                Text(
+                                                    text = "لا يوجد معلمون مطابقون لمعايير البحث",
+                                                    fontSize = 13.sp,
+                                                    color = TextMuted
+                                                )
+                                            }
+                                        }
                                     }
-                                    snackbarMessage = "تم إلغاء تعيين $ringName"
                                 }
-                            )
+
+                                items(filteredTeachers, key = { it.id }) { teacher ->
+                                    val isSelected = selectedTeacher?.id == teacher.id
+                                    TeacherCard(
+                                        teacher = teacher,
+                                        isSelected = isSelected,
+                                        onSelect = { selectedTeacher = teacher },
+                                        onAssignToRing = { assigningTeacherToRing = teacher },
+                                        onToggleStatus = {
+                                            teachersList = teachersList.map {
+                                                if (it.id == teacher.id) {
+                                                    val newStatus = if (it.status == TeacherStatus.ACTIVE) TeacherStatus.SUSPENDED else TeacherStatus.ACTIVE
+                                                    val updated = it.copy(status = newStatus)
+                                                    if (selectedTeacher?.id == it.id) selectedTeacher = updated
+                                                    updated
+                                                } else it
+                                            }
+                                            snackbarMessage = if (teacher.status == TeacherStatus.ACTIVE)
+                                                "تم إيقاف حساب ${teacher.name} مؤقتاً"
+                                            else
+                                                "تم تنشيط حساب ${teacher.name} بنجاح"
+                                        }
+                                    )
+                                }
+                            }
+
+                            if (selectedTeacher != null) {
+                                Card(
+                                    modifier = Modifier
+                                        .weight(1.2f)
+                                        .fillMaxHeight()
+                                        .testTag("teacher_detail_column"),
+                                    shape = RoundedCornerShape(18.dp),
+                                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                                    border = BorderStroke(1.dp, BorderSubtle),
+                                    elevation = CardDefaults.cardElevation(2.dp)
+                                ) {
+                                    TeacherDetailPane(
+                                        teacher = selectedTeacher!!,
+                                        selectedTab = selectedDetailTab,
+                                        onTabSelected = { selectedDetailTab = it },
+                                        onAssignRingClick = { assigningTeacherToRing = selectedTeacher },
+                                        onRemoveRing = { ringName ->
+                                            teachersList = teachersList.map {
+                                                if (it.id == selectedTeacher!!.id) {
+                                                    val updated = it.copy(assignedRings = it.assignedRings.filter { r -> r != ringName })
+                                                    selectedTeacher = updated
+                                                    updated
+                                                } else it
+                                            }
+                                            snackbarMessage = "تم إلغاء تعيين $ringName"
+                                        }
+                                    )
+                                }
+                            }
                         }
                     }
                 }
