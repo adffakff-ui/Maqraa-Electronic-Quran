@@ -39,9 +39,9 @@ data class SecurityIncident(
 object OwnerSecurityManager {
     // بيانات المالك الحقيقية المحفوظة في خادم الأمان المشفر
     const val OWNER_EMAIL = "adffakff@gmail.com"
-    const val OWNER_PHONE = "775484201"
+    const val OWNER_PHONE = "8107"
     const val OWNER_PHONE_INTL = "+967775484201"
-    const val OWNER_PIN_CODE = "7754"
+    const val OWNER_PIN_CODE = "8107"
 
     // حالة الأمان الحالية
     var failedAttemptsCount by mutableIntStateOf(0)
