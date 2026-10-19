@@ -413,32 +413,74 @@ fun AudioRecitationScreen(
 
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        // أزرار التحكم بالمشغل الصوتي
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                FilledIconButton(
-                                    onClick = { isPlayingPreview = !isPlayingPreview },
-                                    shape = CircleShape,
-                                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = SocietyBluePrimary)
-                                ) {
-                                    Icon(
-                                        imageVector = if (isPlayingPreview) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                        contentDescription = "تشغيل",
-                                        tint = Color.White
-                                    )
+                        // أزرار ومشغل الصوت المدمج المتطور
+                        Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(38.dp)
+                                            .clip(CircleShape)
+                                            .background(SocietyBluePrimary)
+                                            .clickable { isPlayingPreview = !isPlayingPreview },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = if (isPlayingPreview) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                            contentDescription = "تشغيل",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column {
+                                        Text(
+                                            text = if (isPlayingPreview) "جاري تشغيل التلاوة..." : "متوقف مؤقتاً",
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = TextDark
+                                        )
+                                        Text(
+                                            text = if (isPlayingPreview) "00:24 / 01:15" else "00:00 / 01:15",
+                                            fontSize = 10.sp,
+                                            color = TextMuted
+                                        )
+                                    }
                                 }
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = if (isPlayingPreview) "00:24 / 01:15" else "00:00 / 01:15",
-                                    fontSize = 11.sp,
-                                    color = TextDark,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+
+                                var currentSpeed by remember { mutableStateOf("1.0x") }
+                                OutlinedButton(
+                                    onClick = {
+                                        currentSpeed = when (currentSpeed) {
+                                            "1.0x" -> "1.25x"
+                                            "1.25x" -> "1.5x"
+                                            else -> "1.0x"
+                                        }
+                                    },
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                                    modifier = Modifier.height(32.dp)
+                                ) {
+                                    Icon(imageVector = Icons.Default.Speed, contentDescription = null, modifier = Modifier.size(12.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(currentSpeed, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
                             }
+
+                            var sliderPos by remember { mutableStateOf(0.32f) }
+                            Slider(
+                                value = sliderPos,
+                                onValueChange = { sliderPos = it },
+                                modifier = Modifier.fillMaxWidth().height(24.dp),
+                                colors = SliderDefaults.colors(
+                                    thumbColor = SocietyBluePrimary,
+                                    activeTrackColor = SocietyBluePrimary
+                                )
+                            )
 
                             // زر بدء التحليل بالذكاء الاصطناعي
                             Button(
@@ -457,7 +499,7 @@ fun AudioRecitationScreen(
                                 },
                                 shape = RoundedCornerShape(10.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = EmeraldDark),
-                                modifier = Modifier.testTag("start_recitation_analysis_btn")
+                                modifier = Modifier.fillMaxWidth().testTag("start_recitation_analysis_btn")
                             ) {
                                 Icon(imageVector = Icons.Default.AutoFixHigh, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
@@ -668,6 +710,122 @@ fun AudioRecitationScreen(
                                     Icon(imageVector = Icons.Default.Comment, contentDescription = null, modifier = Modifier.size(14.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text("تعليق نصي", fontSize = 11.sp)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // ==========================================
+                // معرض ملاحظات المعلم التفاعلي (Teacher Feedback Gallery)
+                // ==========================================
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    border = BorderStroke(1.dp, BorderSubtle),
+                    elevation = CardDefaults.cardElevation(2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(imageVector = Icons.Default.SpeakerNotes, contentDescription = null, tint = SocietyBluePrimary)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "معرض ملاحظات وتوجيهات المعلمين",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextDark
+                                )
+                            }
+                            Badge(containerColor = SocietyBlueLight) {
+                                Text(text = "ملاحظتان نشطتان", color = SocietyBluePrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(4.dp))
+                            }
+                        }
+
+                        val feedbackList = remember {
+                            listOf(
+                                Triple("الشيخ د. عبدالكريم السلمي", "احرص على إتمام المد العارض للسكون وتحقيق الغنة في النون المشددة.", "0:45"),
+                                Triple("الأستاذ محمد القاضي", "أداء طيب وممتاز، يرجى مراعاة تفخيم الراء في كلمة (القرآن).", "0:30")
+                            )
+                        }
+
+                        feedbackList.forEach { (teacher, note, duration) ->
+                            var isPlayingVoice by remember { mutableStateOf(false) }
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, BorderSubtle),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(28.dp)
+                                                    .clip(CircleShape)
+                                                    .background(SocietyBluePrimary.copy(alpha = 0.15f)),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = SocietyBluePrimary, modifier = Modifier.size(16.dp))
+                                            }
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(text = teacher, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                                        }
+                                        Badge(containerColor = EmeraldLight) {
+                                            Text(text = "ملاحظة صوتية ونصحية", color = EmeraldDark, fontSize = 10.sp)
+                                        }
+                                    }
+
+                                    Text(text = note, fontSize = 12.sp, color = TextDark)
+
+                                    // مشغل الملاحظة الصوتية المدمج
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(SocietyBlueLight.copy(alpha = 0.4f))
+                                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            IconButton(
+                                                onClick = { isPlayingVoice = !isPlayingVoice },
+                                                modifier = Modifier.size(32.dp)
+                                            ) {
+                                                Icon(
+                                                    imageVector = if (isPlayingVoice) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                                    contentDescription = null,
+                                                    tint = SocietyBluePrimary,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = if (isPlayingVoice) "جاري الاستماع $duration..." else "تسجيل صوتي توجيهي $duration",
+                                                fontSize = 11.sp,
+                                                color = SocietyBlueDark,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                        }
+                                        Icon(imageVector = Icons.Default.GraphicEq, contentDescription = null, tint = SocietyBluePrimary, modifier = Modifier.size(16.dp))
+                                    }
                                 }
                             }
                         }
