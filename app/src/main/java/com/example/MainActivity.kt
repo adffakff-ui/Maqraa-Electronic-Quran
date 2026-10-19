@@ -37,6 +37,7 @@ import com.example.ui.teachers.TeacherManagementScreen
 import com.example.ui.planner.HifzPlannerScreen
 import com.example.ui.challenges.QuranChallengesScreen
 import com.example.ui.profile.AccountProfileAndPermissionsScreen
+import com.example.ui.backup.TenantBackupRestoreScreen
 import com.example.ui.owner.OwnerControlPanelScreen
 import com.example.ui.owner.OwnerFirestoreTenantsScreen
 import com.example.ui.theme.*
@@ -58,6 +59,7 @@ object AppDestinations {
     const val ACCOUNT_PROFILE = "account_profile"
     const val OWNER_CONTROL = "owner_control"
     const val OWNER_FIRESTORE_TENANTS = "owner_firestore_tenants"
+    const val TENANT_BACKUP_RESTORE = "tenant_backup_restore"
 }
 
 class MainActivity : ComponentActivity() {
@@ -322,6 +324,7 @@ fun SocietyApp() {
                         onNavigateToProfile = { navController.navigate(AppDestinations.ACCOUNT_PROFILE) },
                         onNavigateToOwnerControl = { navController.navigate(AppDestinations.OWNER_CONTROL) },
                         onNavigateToFirestoreTenants = { navController.navigate(AppDestinations.OWNER_FIRESTORE_TENANTS) },
+                        onNavigateToBackup = { navController.navigate(AppDestinations.TENANT_BACKUP_RESTORE) },
                         onSwitchTenant = {
                             navController.navigate(AppDestinations.LOGIN) {
                                 popUpTo(0)
@@ -439,7 +442,8 @@ fun SocietyApp() {
                         onNavigateToParentPortal = { navController.navigate(AppDestinations.PARENT_PORTAL) },
                         onNavigateToTeacherPortal = { navController.navigate(AppDestinations.TEACHER_PORTAL) },
                         onNavigateToReports = { navController.navigate(AppDestinations.REPORTS) },
-                        onNavigateToFirestoreTenants = { navController.navigate(AppDestinations.OWNER_FIRESTORE_TENANTS) }
+                        onNavigateToFirestoreTenants = { navController.navigate(AppDestinations.OWNER_FIRESTORE_TENANTS) },
+                        onNavigateToBackup = { navController.navigate(AppDestinations.TENANT_BACKUP_RESTORE) }
                     )
                 }
 
@@ -450,6 +454,14 @@ fun SocietyApp() {
                         userRole = activeUserRole,
                         onTenantSelected = { currentTenant = it },
                         onNavigateBack = { navController.popBackStack() }
+                    )
+                }
+
+                // النسخ الاحتياطي واستعادة البيانات عبر Firebase Storage
+                composable(AppDestinations.TENANT_BACKUP_RESTORE) {
+                    TenantBackupRestoreScreen(
+                        currentTenant = currentTenant,
+                        onBack = { navController.popBackStack() }
                     )
                 }
             }

@@ -270,6 +270,13 @@ fun AppNavigationDrawerSheet(
                         title = "التقارير وتوليد الشهادات",
                         subtitle = "إحصائيات الإنجاز والشهادات",
                         icon = Icons.Outlined.Assessment
+                    ),
+                    NavDrawerItem(
+                        route = AppDestinations.TENANT_BACKUP_RESTORE,
+                        title = "النسخ الاحتياطي واستعادة البيانات",
+                        subtitle = "تصدير JSON إلى Firebase Storage واستيرادها",
+                        icon = Icons.Outlined.CloudSync,
+                        badge = "JSON"
                     )
                 )
 

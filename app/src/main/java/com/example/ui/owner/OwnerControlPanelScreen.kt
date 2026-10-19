@@ -8,6 +8,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -31,6 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.*
+import com.example.ui.dashboard.ActiveVsPendingRegistrationsDashboard
 import com.example.ui.theme.*
 import kotlinx.coroutines.launch
 
@@ -49,7 +52,8 @@ fun OwnerControlPanelScreen(
     onNavigateToParentPortal: () -> Unit = {},
     onNavigateToTeacherPortal: () -> Unit = {},
     onNavigateToReports: () -> Unit = {},
-    onNavigateToFirestoreTenants: () -> Unit = {}
+    onNavigateToFirestoreTenants: () -> Unit = {},
+    onNavigateToBackup: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -410,6 +414,12 @@ fun OwnerControlPanelScreen(
                     onClick = { selectedTab = 5 },
                     text = { Text("درع الأمان (${OwnerSecurityManager.securityIncidents.size})", fontWeight = FontWeight.Bold) },
                     icon = { Icon(Icons.Default.Security, contentDescription = null) }
+                )
+                Tab(
+                    selected = selectedTab == 6,
+                    onClick = { selectedTab = 6 },
+                    text = { Text("مؤشر التسجيلات (نشط/معلق)", fontWeight = FontWeight.Bold) },
+                    icon = { Icon(Icons.Default.BarChart, contentDescription = null) }
                 )
             }
 
@@ -1010,6 +1020,103 @@ fun OwnerControlPanelScreen(
                             .padding(14.dp),
                         verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
+                        // النسخ الاحتياطي السحابي واستعادة الجمعية عبر Firebase Storage
+                        item {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+                                border = BorderStroke(1.dp, GoldenAmber)
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(Icons.Default.CloudSync, contentDescription = null, tint = GoldenAmber, modifier = Modifier.size(26.dp))
+                                            Spacer(modifier = Modifier.width(10.dp))
+                                            Column {
+                                                Text(
+                                                    text = "النسخ الاحتياطي السحابي (Firebase Storage)",
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 15.sp,
+                                                    color = Color.White
+                                                )
+                                                Text(
+                                                    text = "تصدير بيانات ${currentTenant.shortName} إلى JSON واستيرادها لحل مشاكل المزامنة",
+                                                    fontSize = 11.sp,
+                                                    color = Color(0xFF94A3B8)
+                                                )
+                                            }
+                                        }
+                                        Surface(
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = GoldenAmber.copy(alpha = 0.2f)
+                                        ) {
+                                            Text(
+                                                text = "JSON سحابي",
+                                                color = GoldenAmber,
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    Text(
+                                        text = "يتيح هذا الخيار للمشرف والمالك تصدير كافة الطلاب والمعلمين وسجلات الحضور في ملف JSON موحد وتخزينه في Firebase Storage، مع إمكانية استيرادها واستعادتها بضغطة واحدة في حال انقطاع الشبكة أو تعارض المزامنة.",
+                                        fontSize = 12.sp,
+                                        color = Color(0xFFE2E8F0),
+                                        lineHeight = 18.sp
+                                    )
+
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Button(
+                                            onClick = onNavigateToBackup,
+                                            colors = ButtonDefaults.buttonColors(containerColor = GoldenAmber),
+                                            shape = RoundedCornerShape(10.dp),
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Icon(Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(16.dp))
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text("فتح مركز النسخ والاستعادة", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        }
+
+                                        OutlinedButton(
+                                            onClick = {
+                                                coroutineScope.launch {
+                                                    val res = FirebaseBackupManager.exportTenantToFirebaseStorage(
+                                                        tenant = currentTenant,
+                                                        context = context,
+                                                        performedBy = "مالك النظام (لوحة التحكم)"
+                                                    )
+                                                    res.onSuccess {
+                                                        snackbarMessage = "تم تصدير نسخة ${it.fileName} بنجاح إلى Firebase Storage!"
+                                                    }.onFailure {
+                                                        snackbarMessage = "فشل التصدير: ${it.localizedMessage}"
+                                                    }
+                                                }
+                                            },
+                                            shape = RoundedCornerShape(10.dp),
+                                            border = BorderStroke(1.dp, Color(0xFF94A3B8)),
+                                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+                                        ) {
+                                            Icon(Icons.Default.SaveAlt, contentDescription = null, modifier = Modifier.size(16.dp))
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text("تصدير سريع", fontSize = 11.sp)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         // تهيئة بيانات التطبيق كاملة (Factory Reset / Default Seed)
                         item {
                             Card(
@@ -1588,6 +1695,26 @@ fun OwnerControlPanelScreen(
                                 }
                             }
                         }
+                    }
+                }
+
+                6 -> {
+                    // ==========================================
+                    // تبويب 6: لوحة التسجيلات النشطة مقابل المعلقة لجميع الجمعيات
+                    // ==========================================
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(14.dp)
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        ActiveVsPendingRegistrationsDashboard(
+                            tenants = allTenants,
+                            isDarkMode = true,
+                            onTenantClick = { tenant ->
+                                onTenantSelected(tenant)
+                            }
+                        )
                     }
                 }
             }

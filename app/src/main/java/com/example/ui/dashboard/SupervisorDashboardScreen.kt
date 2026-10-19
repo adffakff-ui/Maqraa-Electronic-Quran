@@ -53,6 +53,7 @@ fun SupervisorDashboardScreen(
     onNavigateToProfile: () -> Unit = {},
     onNavigateToOwnerControl: () -> Unit = {},
     onNavigateToFirestoreTenants: () -> Unit = {},
+    onNavigateToBackup: () -> Unit = {},
     onSwitchTenant: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -206,6 +207,8 @@ fun SupervisorDashboardScreen(
                                                 onNavigateToOwnerControl()
                                             } else if (id == "owner_firestore") {
                                                 onNavigateToFirestoreTenants()
+                                            } else if (id == "backup") {
+                                                onNavigateToBackup()
                                             } else if (id != "dashboard") {
                                                 activeKpiDetail = id
                                             }
@@ -561,6 +564,19 @@ fun SupervisorDashboardScreen(
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text("+ إرسال إشعار", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                 }
+
+                                // النسخ الاحتياطي السحابي (Firebase Storage)
+                                Button(
+                                    onClick = onNavigateToBackup,
+                                    modifier = Modifier.testTag("quick_action_backup_storage"),
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = SocietyBlueDark),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Icon(imageVector = Icons.Default.CloudSync, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("النسخ والاستعادة (Storage)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
                             }
                         }
                     }
@@ -732,6 +748,14 @@ fun SupervisorDashboardScreen(
                             }
                         }
                     }
+
+                    // ==========================================
+                    // لوحة مؤشرات التسجيلات النشطة والمعلقة لجميع الجمعيات
+                    // ==========================================
+                    ActiveVsPendingRegistrationsDashboard(
+                        tenants = SocietyRepository.tenants,
+                        isDarkMode = false
+                    )
 
                     // بنر ترويجي سريع لربط شاشة إدارة المعلمين
                     Card(
