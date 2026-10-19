@@ -439,7 +439,7 @@ fun AudioRecitationScreen(
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Column {
                                         Text(
-                                            text = if (isPlayingPreview) "جاري تشغيل التلاوة..." : "متوقف مؤقتاً",
+                                            text = if (isPlayingPreview) "جاري تشغيل التلاوة..." else "متوقف مؤقتاً",
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = TextDark
