@@ -7,6 +7,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -503,14 +505,29 @@ fun OwnerFirestoreTenantsScreen(
             var rings by remember { mutableStateOf("25") }
             var students by remember { mutableStateOf("500") }
             var teachers by remember { mutableStateOf("20") }
+            var selectedColor by remember { mutableStateOf("#1976D2") }
+            var selectedLogo by remember { mutableStateOf("🕌") }
+
+            val colorPresets = listOf(
+                "#1976D2" to "أزرق",
+                "#2E7D32" to "أخضر",
+                "#673AB7" to "بنفسجي",
+                "#C2185B" to "قرمزي",
+                "#E65100" to "برتقالي",
+                "#00695C" to "تركواز"
+            )
+            val logoPresets = listOf("🕌", "📖", "🌙", "⭐", "🏛️", "🌟", "📚", "🎓")
 
             AlertDialog(
                 onDismissRequest = { showAddDialog = false },
                 icon = { Icon(Icons.Default.CloudUpload, contentDescription = null, tint = SocietyBluePrimary) },
-                title = { Text("إضافة جمعية جديدة في Firestore", fontWeight = FontWeight.Bold) },
+                title = { Text("إضافة جمعية وتخصيص الواجهة", fontWeight = FontWeight.Bold) },
                 text = {
                     Column(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 450.dp)
+                            .verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         OutlinedTextField(
@@ -576,6 +593,48 @@ fun OwnerFirestoreTenantsScreen(
                                 singleLine = true
                             )
                         }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text("تخصيص اللون الأساسي:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            colorPresets.forEach { (hex, label) ->
+                                val isSelected = selectedColor == hex
+                                Surface(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .clickable { selectedColor = hex },
+                                    color = try { Color(android.graphics.Color.parseColor(hex)) } catch (e: Exception) { SocietyBluePrimary },
+                                    border = if (isSelected) BorderStroke(2.dp, Color.Black) else null
+                                ) {}
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text("تخصيص شعار / رمز الجمعية (Logo):", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            logoPresets.forEach { symbol ->
+                                val isSelected = selectedLogo == symbol
+                                Surface(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .clickable { selectedLogo = symbol },
+                                    color = if (isSelected) SocietyBluePrimary.copy(alpha = 0.2f) else Color.LightGray.copy(alpha = 0.3f),
+                                    border = if (isSelected) BorderStroke(1.5.dp, SocietyBluePrimary) else null
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text(text = symbol, fontSize = 16.sp)
+                                    }
+                                }
+                            }
+                        }
                     }
                 },
                 confirmButton = {
@@ -595,7 +654,9 @@ fun OwnerFirestoreTenantsScreen(
                                     unreadMessagesCount = 0,
                                     licenseNumber = license.trim(),
                                     country = "اليمن",
-                                    governorate = city.trim()
+                                    governorate = city.trim(),
+                                    primaryColorHex = selectedColor,
+                                    logoIdentifier = selectedLogo
                                 )
                                 coroutineScope.launch {
                                     isOperatingOnFirestore = true
@@ -603,7 +664,7 @@ fun OwnerFirestoreTenantsScreen(
                                     SocietyRepository.addTenant(newTenant)
                                     isOperatingOnFirestore = false
                                     showAddDialog = false
-                                    snackbarMessage = "تم إضافة وحفظ جمعية ${newTenant.name} في Firestore بنجاح!"
+                                    snackbarMessage = "تم إضافة وحفظ وتخصيص واجهة جمعية ${newTenant.name} بنجاح!"
                                 }
                             }
                         }
@@ -629,14 +690,29 @@ fun OwnerFirestoreTenantsScreen(
             var editRings by remember { mutableStateOf(target.ringsCount.toString()) }
             var editStudents by remember { mutableStateOf(target.studentsCount.toString()) }
             var editTeachers by remember { mutableStateOf(target.teachersCount.toString()) }
+            var editColor by remember { mutableStateOf(target.primaryColorHex) }
+            var editLogo by remember { mutableStateOf(target.logoIdentifier) }
+
+            val colorPresets = listOf(
+                "#1976D2" to "أزرق",
+                "#2E7D32" to "أخضر",
+                "#673AB7" to "بنفسجي",
+                "#C2185B" to "قرمزي",
+                "#E65100" to "برتقالي",
+                "#00695C" to "تركواز"
+            )
+            val logoPresets = listOf("🕌", "📖", "🌙", "⭐", "🏛️", "🌟", "📚", "🎓")
 
             AlertDialog(
                 onDismissRequest = { editingTenant = null },
                 icon = { Icon(Icons.Default.Edit, contentDescription = null, tint = SocietyBluePrimary) },
-                title = { Text("تعديل بيانات الجمعية في Firestore", fontWeight = FontWeight.Bold) },
+                title = { Text("تعديل بيانات وتخصيص واجهة الجمعية", fontWeight = FontWeight.Bold) },
                 text = {
                     Column(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 450.dp)
+                            .verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         OutlinedTextField(
@@ -699,6 +775,48 @@ fun OwnerFirestoreTenantsScreen(
                                 singleLine = true
                             )
                         }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text("تعديل اللون الأساسي:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            colorPresets.forEach { (hex, label) ->
+                                val isSelected = editColor == hex
+                                Surface(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .clickable { editColor = hex },
+                                    color = try { Color(android.graphics.Color.parseColor(hex)) } catch (e: Exception) { SocietyBluePrimary },
+                                    border = if (isSelected) BorderStroke(2.dp, Color.Black) else null
+                                ) {}
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text("تعديل شعار / رمز الجمعية (Logo):", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            logoPresets.forEach { symbol ->
+                                val isSelected = editLogo == symbol
+                                Surface(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .clickable { editLogo = symbol },
+                                    color = if (isSelected) SocietyBluePrimary.copy(alpha = 0.2f) else Color.LightGray.copy(alpha = 0.3f),
+                                    border = if (isSelected) BorderStroke(1.5.dp, SocietyBluePrimary) else null
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text(text = symbol, fontSize = 16.sp)
+                                    }
+                                }
+                            }
+                        }
                     }
                 },
                 confirmButton = {
@@ -713,7 +831,9 @@ fun OwnerFirestoreTenantsScreen(
                                 ringsCount = editRings.toIntOrNull() ?: target.ringsCount,
                                 studentsCount = editStudents.toIntOrNull() ?: target.studentsCount,
                                 teachersCount = editTeachers.toIntOrNull() ?: target.teachersCount,
-                                governorate = editCity.trim()
+                                governorate = editCity.trim(),
+                                primaryColorHex = editColor,
+                                logoIdentifier = editLogo
                             )
                             coroutineScope.launch {
                                 isOperatingOnFirestore = true
@@ -721,7 +841,7 @@ fun OwnerFirestoreTenantsScreen(
                                 SocietyRepository.updateTenant(updated)
                                 isOperatingOnFirestore = false
                                 editingTenant = null
-                                snackbarMessage = "تم تحديث بيانات ${updated.shortName} في Firestore سحابياً بنجاح!"
+                                snackbarMessage = "تم تحديث وتخصيص بيانات ${updated.shortName} بنجاح!"
                             }
                         }
                     ) {

@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -69,15 +70,29 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MyApplicationTheme {
-                SocietyApp()
+            var darkModePref by remember { mutableStateOf("system") } // "system", "dark", "light"
+            val systemDark = isSystemInDarkTheme()
+            val effectiveDark = when (darkModePref) {
+                "dark" -> true
+                "light" -> false
+                else -> systemDark
+            }
+
+            MyApplicationTheme(darkTheme = effectiveDark) {
+                SocietyApp(
+                    darkModePref = darkModePref,
+                    onDarkModeChange = { darkModePref = it }
+                )
             }
         }
     }
 }
 
 @Composable
-fun SocietyApp() {
+fun SocietyApp(
+    darkModePref: String = "system",
+    onDarkModeChange: (String) -> Unit = {}
+) {
     val navController = rememberNavController()
 
     // Current Active Tenant & State
@@ -371,6 +386,8 @@ fun SocietyApp() {
                     AccountProfileAndPermissionsScreen(
                         currentTenant = currentTenant,
                         userRole = activeUserRole,
+                        darkModePref = darkModePref,
+                        onDarkModeChange = onDarkModeChange,
                         onNavigateToRolePermissions = { navController.navigate(AppDestinations.ROLE_PERMISSIONS) },
                         onBack = { navController.popBackStack() }
                     )

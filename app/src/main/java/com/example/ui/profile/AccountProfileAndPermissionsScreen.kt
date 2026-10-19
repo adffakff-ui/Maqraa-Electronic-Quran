@@ -29,6 +29,8 @@ import com.example.data.UserRole
 fun AccountProfileAndPermissionsScreen(
     currentTenant: Tenant,
     userRole: UserRole = UserRole.SUPERVISOR,
+    darkModePref: String = "system",
+    onDarkModeChange: (String) -> Unit = {},
     onNavigateToRolePermissions: (() -> Unit)? = null,
     onBack: () -> Unit
 ) {
@@ -62,6 +64,81 @@ fun AccountProfileAndPermissionsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Dark Mode / Appearance Settings Card
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primaryContainer),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.DarkMode,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Column {
+                                Text(
+                                    text = "إعدادات المظهر والوضع الداكن",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "التبديل التلقائي بناءً على النظام أو التبديل اليدوي",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            val options = listOf(
+                                "system" to "تلقائي (النظام)",
+                                "dark" to "الوضع الداكن",
+                                "light" to "الوضع الفاتح"
+                            )
+                            options.forEach { (key, label) ->
+                                val isSelected = darkModePref == key
+                                FilterChip(
+                                    selected = isSelected,
+                                    onClick = { onDarkModeChange(key) },
+                                    label = { Text(label, fontSize = 11.sp, maxLines = 1) },
+                                    modifier = Modifier.weight(1f),
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             // RBAC Management Card
             if (onNavigateToRolePermissions != null) {
                 item {

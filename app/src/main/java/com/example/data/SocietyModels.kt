@@ -19,7 +19,9 @@ data class Tenant(
     val unreadMessagesCount: Int,
     val licenseNumber: String = "10492",
     val country: String = "اليمن",
-    val governorate: String = "تعز"
+    val governorate: String = "تعز",
+    val primaryColorHex: String = "#1976D2",
+    val logoIdentifier: String = "🕌"
 )
 
 // Current Logged-in User
@@ -743,7 +745,7 @@ object SocietyRepository {
         )
     )
 
-    var tenants by mutableStateOf(initialTenants)
+    var tenants by mutableStateOf<List<Tenant>>(emptyList())
 
     /**
      * ميزة المطور والإدارة: فحص واعتماد طلب انضمام جمعية جديدة
@@ -1185,18 +1187,10 @@ object SocietyRepository {
     // ==========================================
     // إدارة وتحكم المالك الشامل (Owner Master State & CRUD)
     // ==========================================
-    var allTeachers by mutableStateOf(getInitialTeachers())
-    var allRings by mutableStateOf(getInitialRings())
-    var allStudents by mutableStateOf(getInitialCircleStudents())
-    var allUsers by mutableStateOf(
-        listOf(
-            masterOwner,
-            defaultSupervisor,
-            UserProfile("usr_tch_1", "الشيخ عبد الله بن محمد المنصور", "معلم حلقة الإتقان", UserRole.TEACHER, "0503456781", "almansoor@maknoon.org.sa"),
-            UserProfile("usr_tch_2", "الشيخ فهد بن سليمان الدوسري", "معلم حلقة أبي بن كعب", UserRole.TEACHER, "0548912345", "f.aldosari@maknoon.org.sa"),
-            UserProfile("usr_par_1", "أ. خالد العمري (ولي أمر)", "ولي أمر الطالب أنس", UserRole.GUARDIAN, "0561239874", "khaled.omari@gmail.com")
-        )
-    )
+    var allTeachers by mutableStateOf<List<Teacher>>(emptyList())
+    var allRings by mutableStateOf<List<QuranRing>>(emptyList())
+    var allStudents by mutableStateOf<List<CircleStudent>>(emptyList())
+    var allUsers by mutableStateOf(listOf(masterOwner))
 
     fun addTenant(tenant: Tenant) {
         tenants = listOf(tenant) + tenants
