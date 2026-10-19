@@ -369,10 +369,11 @@ fun OwnerControlPanelScreen(
             }
 
             // Tabs Selector (6 Tabs)
-            TabRow(
+            ScrollableTabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.primary
+                contentColor = MaterialTheme.colorScheme.primary,
+                edgePadding = 8.dp
             ) {
                 Tab(
                     selected = selectedTab == 0,
@@ -407,7 +408,7 @@ fun OwnerControlPanelScreen(
                 Tab(
                     selected = selectedTab == 5,
                     onClick = { selectedTab = 5 },
-                    text = { Text("درع الأمان والاختراق (${OwnerSecurityManager.securityIncidents.size})", fontWeight = FontWeight.Bold) },
+                    text = { Text("درع الأمان (${OwnerSecurityManager.securityIncidents.size})", fontWeight = FontWeight.Bold) },
                     icon = { Icon(Icons.Default.Security, contentDescription = null) }
                 )
             }
