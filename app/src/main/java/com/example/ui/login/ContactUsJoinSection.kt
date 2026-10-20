@@ -420,7 +420,7 @@ fun ContactUsJoinSection(
                         },
                         textStyle = inputTextStyle,
                         label = { Text("اسم المشرف أو مسؤول التواصل *", fontSize = 12.sp, fontWeight = FontWeight.Bold) },
-                        placeholder = { Text("مثال: الشيخ / أ. عبد الله محمد", fontSize = 12.sp) },
+                        placeholder = { Text(":  ", fontSize = 12.sp) },
                         leadingIcon = {
                             Icon(Icons.Default.Person, contentDescription = null, tint = SocietyBluePrimary)
                         },
@@ -443,7 +443,7 @@ fun ContactUsJoinSection(
                         },
                         textStyle = inputTextStyle,
                         label = { Text("رقم الجوال أو الواتساب *", fontSize = 12.sp, fontWeight = FontWeight.Bold) },
-                        placeholder = { Text("مثال: 770123456 أو +967...", fontSize = 12.sp) },
+                        placeholder = { Text(":  أو +967...", fontSize = 12.sp) },
                         leadingIcon = {
                             Icon(Icons.Default.Phone, contentDescription = null, tint = GoldenAmber)
                         },
@@ -580,11 +580,11 @@ fun ContactUsJoinSection(
     // نافذة فحص البيانات وزر الموافقة على الطلب (ميزة المطور)
     // ==========================================
     if (showDeveloperReviewModal) {
-        val effectiveName = if (societyName.isNotBlank()) societyName.trim() else "جمعية الفرقان لتحفيظ القرآن"
-        val effectiveGov = if (governorateAndCity.isNotBlank()) governorateAndCity.trim() else "تعز"
-        val effectivePerson = if (contactPersonName.isNotBlank()) contactPersonName.trim() else "أ. عبد الله محمد"
-        val effectivePhone = if (phoneNumber.isNotBlank()) phoneNumber.trim() else "770123456"
-        val effectiveEmail = if (contactEmail.isNotBlank()) contactEmail.trim() else "info@society.org"
+        val effectiveName = if (societyName.isNotBlank()) societyName.trim() else " "
+        val effectiveGov = if (governorateAndCity.isNotBlank()) governorateAndCity.trim() else ""
+        val effectivePerson = if (contactPersonName.isNotBlank()) contactPersonName.trim() else " "
+        val effectivePhone = if (phoneNumber.isNotBlank()) phoneNumber.trim() else ""
+        val effectiveEmail = if (contactEmail.isNotBlank()) contactEmail.trim() else ""
         val effectiveNotes = notesOrRingsCount.ifBlank { "15 حلقة قرآنية للبنين والبنات" }
 
         AlertDialog(
