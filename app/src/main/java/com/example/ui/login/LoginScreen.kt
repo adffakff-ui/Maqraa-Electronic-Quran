@@ -305,7 +305,7 @@ fun LoginScreen(
                                 .testTag("username_phone_input"),
                             placeholder = {
                                 Text(
-                                    "05xxxxxxxx أو user@example.com",
+                                    " أو ",
                                     fontSize = 13.sp,
                                     color = TextSubtle
                                 )
@@ -1065,7 +1065,7 @@ fun LoginScreen(
                                 value = resetInput,
                                 onValueChange = { resetInput = it },
                                 modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text("05xxxxxxxx") },
+                                placeholder = { Text("") },
                                 singleLine = true,
                                 shape = RoundedCornerShape(10.dp)
                             )
@@ -1208,7 +1208,7 @@ fun LoginScreen(
                             OutlinedTextField(
                                 value = regPhone,
                                 onValueChange = { regPhone = it },
-                                label = { Text("رقم الجوال (05xxxxxxxx)") },
+                                label = { Text("رقم الجوال ()") },
                                 modifier = Modifier.fillMaxWidth(),
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                                 singleLine = true,
@@ -1221,7 +1221,7 @@ fun LoginScreen(
                                     value = regSupervisorDept,
                                     onValueChange = { regSupervisorDept = it },
                                     label = { Text("القسم الإشرافي / الاعتماد") },
-                                    placeholder = { Text("مثال: إدارة الشؤون التعليمية والتحفيظ") },
+                                    placeholder = { Text(":") },
                                     modifier = Modifier.fillMaxWidth(),
                                     singleLine = true,
                                     shape = RoundedCornerShape(10.dp)
@@ -1359,7 +1359,7 @@ fun LoginScreen(
                             OutlinedTextField(
                                 value = otpValue,
                                 onValueChange = { if (it.length <= 4) otpValue = it },
-                                label = { Text("رمز التحقق (مثال: 4421)") },
+                                label = { Text("رمز التحقق ()") },
                                 modifier = Modifier.fillMaxWidth(),
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 singleLine = true,
