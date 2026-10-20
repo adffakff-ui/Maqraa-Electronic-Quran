@@ -745,7 +745,45 @@ object SocietyRepository {
         )
     )
 
-    var tenants by mutableStateOf<List<Tenant>>(emptyList())
+    val defaultRealTenant = Tenant(
+        id = "t_official_main",
+        name = "الجمعية الخيرية لتحفيظ القرآن الكريم",
+        shortName = "الجمعية المركزية",
+        city = "المركز الرئيسي",
+        code = "QCA-MAIN",
+        ringsCount = 0,
+        studentsCount = 0,
+        teachersCount = 0,
+        attendanceRate = 100,
+        unreadMessagesCount = 0,
+        licenseNumber = "10492",
+        country = "اليمن",
+        governorate = "تعز",
+        primaryColorHex = "#1976D2",
+        logoIdentifier = "🕌"
+    )
+
+    val defaultRing = QuranRing(
+        id = "ring_placeholder",
+        name = "حلقة جديدة",
+        teacherName = "لم يُعين معلم بعد",
+        timeSlot = "عصراً",
+        studentCount = 0,
+        maxCapacity = 25,
+        currentJuz = "جزء عمّ وقصار السور",
+        attendancePercent = 100
+    )
+
+    val defaultStudent = CircleStudent(
+        id = "std_placeholder",
+        name = "طالب جديد",
+        guardianName = "ولي الأمر",
+        guardianPhone = "0500000000"
+    )
+
+    var isProductionMode by mutableStateOf(false)
+
+    var tenants by mutableStateOf<List<Tenant>>(initialTenants)
 
     /**
      * ميزة المطور والإدارة: فحص واعتماد طلب انضمام جمعية جديدة
@@ -1267,13 +1305,24 @@ object SocietyRepository {
         globalRegistrationActive = true
     }
 
-    // تفريغ وتصفير بيانات التطبيق بالكامل مع الحفاظ حصراً على حساب المالك
+    // تفريغ وتصفير بيانات التطبيق بالكامل مع الحفاظ على حساب المالك وبدء النسخة الحقيقية للنظام
     fun wipeAllDataPreservingOwner() {
-        tenants = emptyList()
+        tenants = listOf(defaultRealTenant)
         allTeachers = emptyList()
         allRings = emptyList()
         allStudents = emptyList()
-        allUsers = listOf(masterOwner)
+        allUsers = listOf(masterOwner, defaultSupervisor)
+        isProductionMode = true
+    }
+
+    // تصفير جميع بيانات الجمعيات وجعل النظام جاهزاً للعمل الفعلي بدون أخطاء
+    fun resetAllSocietiesDataClean() {
+        tenants = listOf(defaultRealTenant)
+        allTeachers = emptyList()
+        allRings = emptyList()
+        allStudents = emptyList()
+        allUsers = listOf(masterOwner, defaultSupervisor)
+        isProductionMode = true
     }
 
     fun isAuthorizedOwner(emailOrPhone: String): Boolean {

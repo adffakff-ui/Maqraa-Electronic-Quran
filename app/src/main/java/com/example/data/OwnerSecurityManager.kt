@@ -36,6 +36,19 @@ data class SecurityIncident(
     var emailAlertSent: Boolean = false
 )
 
+data class UserAccessLog(
+    val id: String = UUID.randomUUID().toString(),
+    val timestamp: String,
+    val userNameOrRole: String,
+    val role: UserRole,
+    val tenantName: String,
+    val deviceModel: String,
+    val clientIp: String = "192.168.1.108",
+    val accessType: String,
+    val generatedOtp: String? = null,
+    val status: String = "مصرح به (نشط)"
+)
+
 object OwnerSecurityManager {
     // بيانات المالك الحقيقية المحفوظة في خادم الأمان المشفر
     const val OWNER_EMAIL = "adffakff@gmail.com"
@@ -91,9 +104,7 @@ object OwnerSecurityManager {
                 clean == OWNER_PHONE_INTL ||
                 clean == "967775484201" ||
                 clean == "0775484201" ||
-                clean == OWNER_PIN_CODE ||
-                clean == "owner" ||
-                clean == "مالك"
+                clean == OWNER_PIN_CODE
 
         if (isAuthorized) {
             // إعادة تصفير المحاولات الفاشلة عند الدخول الصحيح
@@ -248,6 +259,111 @@ ${if (isLockdownActive) "3. تم تجميد البوابة وتفعيل وضع �
         }
     }
 
+    // سجل تسجيلات الدخول والأنشطة لجميع المستخدمين والزائرين
+    var userAccessLogs by mutableStateOf<List<UserAccessLog>>(listOf(
+        UserAccessLog(
+            timestamp = SimpleDateFormat("dd/MM/yyyy hh:mm:ss a", Locale("ar")).format(Date()),
+            userNameOrRole = "مالك النظام العام (Super Admin)",
+            role = UserRole.OWNER,
+            tenantName = "المركز الرئيسي الموحد",
+            deviceModel = "${Build.MANUFACTURER} ${Build.MODEL}",
+            accessType = "تسجيل دخول المالك والتحقق البيومتري",
+            generatedOtp = OWNER_PIN_CODE,
+            status = "نشط وموثق"
+        )
+    ))
+
+    /**
+     * تسجيل وتوثيق دخول أي مستخدم أو زائر إلى النظام وإشعار المالك فوراً
+     */
+    fun logUserAccess(
+        userNameOrRole: String,
+        role: UserRole,
+        tenantName: String,
+        context: Context? = null,
+        accessType: String = "تسجيل دخول مستخدم",
+        otpCode: String? = null
+    ): UserAccessLog {
+        val dateFormat = SimpleDateFormat("dd/MM/yyyy hh:mm:ss a", Locale("ar"))
+        val currentTime = dateFormat.format(Date())
+        val device = "${Build.MANUFACTURER} ${Build.MODEL} (Android ${Build.VERSION.RELEASE})"
+
+        val log = UserAccessLog(
+            timestamp = currentTime,
+            userNameOrRole = userNameOrRole,
+            role = role,
+            tenantName = tenantName,
+            deviceModel = device,
+            accessType = accessType,
+            generatedOtp = otpCode,
+            status = "مصرح به (نشط)"
+        )
+
+        userAccessLogs = listOf(log) + userAccessLogs
+
+        // إرسال إشعار فوري للمالك على شاشة الجهاز
+        context?.let { ctx ->
+            LocalNotificationHelper.showSessionReminderNotification(
+                context = ctx,
+                title = "👤 إشعار دخول: $userNameOrRole (${role.label})",
+                message = "تم الدخول لجمعية $tenantName من جهاز: $device ${if (otpCode != null) "• رمز OTP: $otpCode" else ""}"
+            )
+        }
+
+        return log
+    }
+
+    /**
+     * توليد وإرسال رمز التحقق (OTP) للمستخدم وربطه المباشر بملف المالك وواتساب
+     */
+    fun generateAndSendOtpToOwner(
+        context: Context,
+        requesterName: String,
+        targetPhoneOrEmail: String,
+        role: UserRole
+    ): String {
+        val randomOtp = (100000..999999).random().toString()
+        val log = logUserAccess(
+            userNameOrRole = requesterName,
+            role = role,
+            tenantName = "نظام بوابة تحفيظ القرآن",
+            context = context,
+            accessType = "طلب رمز تحقق أمني (OTP)",
+            otpCode = randomOtp
+        )
+
+        val alertText = """
+🔐 *[رمز التحقق الأمني - OTP]* 🔐
+تطبيق إدارة الجمعيات والحلقات القرآنية
+
+مرحباً بك!
+تم طلب رمز تحقق للدخول من: $requesterName
+الحساب: $targetPhoneOrEmail
+الدور: ${role.label}
+
+رمز التحقق الخاص بك هو:
+👉 *$randomOtp* 👈
+
+📅 التوقيت: ${log.timestamp}
+📱 الجهاز: ${log.deviceModel}
+⚠️ تنبيه أمني: لا تشارك هذا الرمز مع أي شخص غير مخول.
+        """.trimIndent()
+
+        val encoded = URLEncoder.encode(alertText, "UTF-8")
+        val whatsappIntent = Intent(Intent.ACTION_VIEW).apply {
+            data = Uri.parse("https://api.whatsapp.com/send?phone=967775484201&text=$encoded")
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+
+        try {
+            context.startActivity(whatsappIntent)
+        } catch (e: Exception) {
+            Toast.makeText(context, "تم توليد رمز OTP: $randomOtp (تم تسجيل العملية بملف المالك)", Toast.LENGTH_LONG).show()
+        }
+
+        return randomOtp
+    }
+
     // إعادة ضبط نظام الأمان وتصفير عداد المحاولات الفاشلة
     fun resetSecurityLockdown() {
         failedAttemptsCount = 0
@@ -257,5 +373,10 @@ ${if (isLockdownActive) "3. تم تجميد البوابة وتفعيل وضع �
     // مسح سجل الإنذارات
     fun clearIncidents() {
         securityIncidents = emptyList()
+    }
+
+    // مسح سجل دخول المستخدمين
+    fun clearUserAccessLogs() {
+        userAccessLogs = emptyList()
     }
 }

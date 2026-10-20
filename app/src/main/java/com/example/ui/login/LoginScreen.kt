@@ -46,6 +46,8 @@ import com.example.data.Tenant
 import com.example.data.UserRole
 import com.example.data.OwnerSecurityManager
 import com.example.data.SecurityIncident
+import com.example.data.OtpSecuritySystem
+import com.example.ui.security.OtpVerificationDialog
 import com.example.ui.theme.*
 import com.example.ui.settings.LanguageToggleChip
 import com.example.ui.security.BiometricHelper
@@ -64,8 +66,8 @@ fun LoginScreen(
 ) {
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
-    var usernameOrPhone by remember { mutableStateOf("0551234567") }
-    var password by remember { mutableStateOf("••••••••") }
+    var usernameOrPhone by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
@@ -305,7 +307,7 @@ fun LoginScreen(
                                 .testTag("username_phone_input"),
                             placeholder = {
                                 Text(
-                                    " أو ",
+                                    "05xxxxxxxx أو user@example.com",
                                     fontSize = 13.sp,
                                     color = TextSubtle
                                 )
@@ -374,14 +376,24 @@ fun LoginScreen(
                             ),
                             keyboardActions = KeyboardActions(
                                 onDone = {
-                                    startLoginProcess(
-                                        userInput = usernameOrPhone,
-                                        currentTenant = currentTenant,
-                                        coroutineScope = coroutineScope,
-                                        setLoading = { isContextLoading = it },
-                                        setStatus = { loadingStatusText = it },
-                                        onSuccess = onLoginSuccess
-                                    )
+                                    val trimmed = usernameOrPhone.trim()
+                                    if (trimmed.isBlank()) {
+                                        errorMessage = "يرجى إدخال اسم المستخدم أو رقم الهاتف للدخول."
+                                    } else if (password.isBlank()) {
+                                        errorMessage = "يرجى إدخال كلمة المرور."
+                                    } else if (trimmed == "demo" || trimmed == "test" || trimmed == "supervisor" || trimmed == "123456") {
+                                        errorMessage = "تم تصفير وإلغاء كافة الحسابات والأكواد التجريبية نهائياً. يرجى إدخال بياناتك المعتمدة أو رمز التحقق (OTP)."
+                                    } else {
+                                        errorMessage = null
+                                        startLoginProcess(
+                                            userInput = usernameOrPhone,
+                                            currentTenant = currentTenant,
+                                            coroutineScope = coroutineScope,
+                                            setLoading = { isContextLoading = it },
+                                            setStatus = { loadingStatusText = it },
+                                            onSuccess = onLoginSuccess
+                                        )
+                                    }
                                 }
                             ),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -408,14 +420,24 @@ fun LoginScreen(
                         ) {
                             Button(
                                 onClick = {
-                                    startLoginProcess(
-                                        userInput = usernameOrPhone,
-                                        currentTenant = currentTenant,
-                                        coroutineScope = coroutineScope,
-                                        setLoading = { isContextLoading = it },
-                                        setStatus = { loadingStatusText = it },
-                                        onSuccess = onLoginSuccess
-                                    )
+                                    val trimmed = usernameOrPhone.trim()
+                                    if (trimmed.isBlank()) {
+                                        errorMessage = "يرجى إدخال اسم المستخدم أو رقم الهاتف للدخول."
+                                    } else if (password.isBlank()) {
+                                        errorMessage = "يرجى إدخال كلمة المرور."
+                                    } else if (trimmed == "demo" || trimmed == "test" || trimmed == "supervisor" || trimmed == "123456") {
+                                        errorMessage = "تم تصفير وإلغاء كافة الحسابات والأكواد التجريبية نهائياً. يرجى إدخال بياناتك المعتمدة أو رمز التحقق (OTP)."
+                                    } else {
+                                        errorMessage = null
+                                        startLoginProcess(
+                                            userInput = usernameOrPhone,
+                                            currentTenant = currentTenant,
+                                            coroutineScope = coroutineScope,
+                                            setLoading = { isContextLoading = it },
+                                            setStatus = { loadingStatusText = it },
+                                            onSuccess = onLoginSuccess
+                                        )
+                                    }
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -1065,7 +1087,7 @@ fun LoginScreen(
                                 value = resetInput,
                                 onValueChange = { resetInput = it },
                                 modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text("") },
+                                placeholder = { Text("05xxxxxxxx") },
                                 singleLine = true,
                                 shape = RoundedCornerShape(10.dp)
                             )
@@ -1208,7 +1230,7 @@ fun LoginScreen(
                             OutlinedTextField(
                                 value = regPhone,
                                 onValueChange = { regPhone = it },
-                                label = { Text("رقم الجوال ()") },
+                                label = { Text("رقم الجوال (05xxxxxxxx)") },
                                 modifier = Modifier.fillMaxWidth(),
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                                 singleLine = true,
@@ -1221,7 +1243,7 @@ fun LoginScreen(
                                     value = regSupervisorDept,
                                     onValueChange = { regSupervisorDept = it },
                                     label = { Text("القسم الإشرافي / الاعتماد") },
-                                    placeholder = { Text(":") },
+                                    placeholder = { Text("مثال: إدارة الشؤون التعليمية والتحفيظ") },
                                     modifier = Modifier.fillMaxWidth(),
                                     singleLine = true,
                                     shape = RoundedCornerShape(10.dp)
@@ -1308,99 +1330,22 @@ fun LoginScreen(
         // ==========================================
         if (quickAuthMethod != null) {
             val method = quickAuthMethod!!
-            var otpValue by remember { mutableStateOf("") }
-            var isCodeSent by remember { mutableStateOf(false) }
-
-            AlertDialog(
-                onDismissRequest = { quickAuthMethod = null },
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = when (method) {
-                                "WhatsApp" -> Icons.AutoMirrored.Filled.Chat
-                                "SMS" -> Icons.Default.Sms
-                                else -> Icons.Default.Email
-                            },
-                            contentDescription = null,
-                            tint = when (method) {
-                                "WhatsApp" -> Color(0xFF15803D)
-                                "SMS" -> GoldenAmber
-                                else -> SocietyBluePrimary
-                            }
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "تسجيل سريع عبر $method",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                },
-                text = {
-                    Column {
-                        Text(
-                            text = if (!isCodeSent)
-                                "سيتم إرسال رمز تحقق مباشر وسريع عبر $method إلى رقم الجوال / البريد المعتمد:"
-                            else
-                                "أدخل رمز التحقق (OTP) المكوّن من 4 أرقام لتسجيل الدخول الفوري:",
-                            fontSize = 12.sp,
-                            color = TextMuted
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        if (!isCodeSent) {
-                            val targetDisplay = if (method == "WhatsApp") "775484201 (واتساب المالك)" else "775484201"
-                            Text(
-                                text = "الهدف: $targetDisplay • الجمعية: ${currentTenant.shortName}",
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = TextDark
-                            )
-                        } else {
-                            OutlinedTextField(
-                                value = otpValue,
-                                onValueChange = { if (it.length <= 4) otpValue = it },
-                                label = { Text("رمز التحقق ()") },
-                                modifier = Modifier.fillMaxWidth(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true,
-                                shape = RoundedCornerShape(10.dp)
-                            )
-                        }
-                    }
-                },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            if (!isCodeSent) {
-                                isCodeSent = true
-                            } else {
-                                val usedInput = usernameOrPhone
-                                quickAuthMethod = null
-                                startLoginProcess(
-                                    userInput = usedInput,
-                                    currentTenant = currentTenant,
-                                    coroutineScope = coroutineScope,
-                                    setLoading = { isContextLoading = it },
-                                    setStatus = { loadingStatusText = it },
-                                    onSuccess = onLoginSuccess
-                                )
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = when (method) {
-                                "WhatsApp" -> Color(0xFF15803D)
-                                "SMS" -> GoldenAmber
-                                else -> SocietyBluePrimary
-                            }
-                        )
-                    ) {
-                        Text(if (!isCodeSent) "إرسال الرمز الآن" else "تأكيد الدخول")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { quickAuthMethod = null }) {
-                        Text("إلغاء")
-                    }
+            OtpVerificationDialog(
+                purpose = "تسجيل دخول وتوثيق سريع عبر $method",
+                recipientName = if (usernameOrPhone.isNotBlank()) usernameOrPhone else "مستخدم / زائر",
+                targetPhoneOrEmail = if (method == "WhatsApp") OwnerSecurityManager.OWNER_PHONE_INTL else usernameOrPhone,
+                onDismiss = { quickAuthMethod = null },
+                onVerified = {
+                    val usedInput = usernameOrPhone
+                    quickAuthMethod = null
+                    startLoginProcess(
+                        userInput = usedInput,
+                        currentTenant = currentTenant,
+                        coroutineScope = coroutineScope,
+                        setLoading = { isContextLoading = it },
+                        setStatus = { loadingStatusText = it },
+                        onSuccess = onLoginSuccess
+                    )
                 }
             )
         }
@@ -1763,11 +1708,23 @@ private fun startLoginProcess(
         val isOwnerUser = SocietyRepository.isOwner(userInput)
         if (isOwnerUser) {
             setStatus("توثيق هوية مالك النظام وتشفير الاتصال • منح صلاحيات Root الكاملة...")
+            OwnerSecurityManager.logUserAccess(
+                userNameOrRole = "مالك التطبيق العام (Super Admin)",
+                role = UserRole.OWNER,
+                tenantName = currentTenant.shortName,
+                accessType = "تسجيل دخول المالك والتحقق الأمني الموثق"
+            )
             delay(400)
             setLoading(false)
             onSuccess(currentTenant, UserRole.OWNER)
         } else {
             setStatus("تهيئة الجلسة الرقمية وتوثيق الحساب...")
+            OwnerSecurityManager.logUserAccess(
+                userNameOrRole = if (userInput.isNotBlank()) "المشرف: $userInput" else "المشرف العام",
+                role = UserRole.SUPERVISOR,
+                tenantName = currentTenant.shortName,
+                accessType = "تسجيل دخول مستخدم / زائر"
+            )
             delay(350)
             setStatus("تحميل بيانات سياق المستأجر: ${currentTenant.shortName}...")
             delay(350)

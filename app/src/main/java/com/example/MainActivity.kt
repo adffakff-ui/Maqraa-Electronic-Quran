@@ -96,10 +96,10 @@ fun SocietyApp(
     val navController = rememberNavController()
 
     // Current Active Tenant & State
-    var currentTenant by remember { mutableStateOf(SocietyRepository.tenants.first()) }
+    var currentTenant by remember { mutableStateOf(SocietyRepository.tenants.firstOrNull() ?: SocietyRepository.defaultRealTenant) }
     var activeUserRole by remember { mutableStateOf(UserRole.SUPERVISOR) }
-    var selectedRingForDetail by remember { mutableStateOf(SocietyRepository.getInitialRings().first()) }
-    var selectedStudentForRecitation by remember { mutableStateOf(SocietyRepository.getInitialCircleStudents().first()) }
+    var selectedRingForDetail by remember { mutableStateOf(SocietyRepository.allRings.firstOrNull() ?: SocietyRepository.getInitialRings().firstOrNull() ?: SocietyRepository.defaultRing) }
+    var selectedStudentForRecitation by remember { mutableStateOf(SocietyRepository.allStudents.firstOrNull() ?: SocietyRepository.getInitialCircleStudents().firstOrNull() ?: SocietyRepository.defaultStudent) }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route

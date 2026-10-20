@@ -320,8 +320,24 @@ fun HifzPlannerScreen(
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
                                             Column {
-                                                Text(text = "الهدف القرآني:", fontSize = 11.sp, color = TextMuted)
-                                                Text(text = "${plan.targetSurah} (${plan.targetAyahRange})", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = TextDark)
+                                                Text(text = "الهدف القرآني والمسار:", fontSize = 11.sp, color = TextMuted)
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Text(text = "${plan.targetSurah} (${plan.targetAyahRange})", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = TextDark)
+                                                    Spacer(modifier = Modifier.width(6.dp))
+                                                    val classification = QuranClassificationHelper.getClassification(plan.targetSurah)
+                                                    Surface(
+                                                        shape = RoundedCornerShape(6.dp),
+                                                        color = if (classification == SurahClassification.MAKKI) Color(0xFFFEF3C7) else Color(0xFFDCFCE7)
+                                                    ) {
+                                                        Text(
+                                                            text = classification.badge,
+                                                            fontSize = 9.sp,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = if (classification == SurahClassification.MAKKI) Color(0xFF92400E) else Color(0xFF166534),
+                                                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                                                        )
+                                                    }
+                                                }
                                             }
                                             Column(horizontalAlignment = Alignment.End) {
                                                 Text(text = "نوع الخطة:", fontSize = 11.sp, color = TextMuted)

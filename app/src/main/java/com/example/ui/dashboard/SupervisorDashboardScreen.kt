@@ -75,9 +75,10 @@ fun SupervisorDashboardScreen(
     var activeKpiDetail by remember { mutableStateOf<String?>(null) }
 
     // Dynamic Lists State
-    var ringsList by remember { mutableStateOf(SocietyRepository.getInitialRings()) }
-    var activitiesList by remember { mutableStateOf(SocietyRepository.getInitialActivities()) }
+    var ringsList by remember { mutableStateOf(if (SocietyRepository.isProductionMode) SocietyRepository.allRings else SocietyRepository.getInitialRings()) }
+    var activitiesList by remember { mutableStateOf(if (SocietyRepository.isProductionMode) emptyList() else SocietyRepository.getInitialActivities()) }
     var systemSnackbarMessage by remember { mutableStateOf<String?>(null) }
+    var showResetDataConfirmDialog by remember { mutableStateOf(false) }
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         ModalNavigationDrawer(
@@ -433,6 +434,71 @@ fun SupervisorDashboardScreen(
                     }
 
                     // ==========================================
+                    // بطاقة وضع النظام: تصفير البيانات والعمل الفعلي
+                    // ==========================================
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("production_mode_banner"),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (SocietyRepository.isProductionMode) Color(0xFFF0FDF4) else Color(0xFFEFF6FF)
+                        ),
+                        border = BorderStroke(
+                            1.dp,
+                            if (SocietyRepository.isProductionMode) Color(0xFFBBF7D0) else Color(0xFFBFDBFE)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                Icon(
+                                    imageVector = if (SocietyRepository.isProductionMode) Icons.Default.CheckCircle else Icons.Default.Handyman,
+                                    contentDescription = null,
+                                    tint = if (SocietyRepository.isProductionMode) EmeraldDark else SocietyBluePrimary,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text(
+                                        text = if (SocietyRepository.isProductionMode) "🟢 النظام في وضع التشغيل الفعلي (Production Mode)" else "⚙️ النظام في وضع المعاينة التجريبية",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.sp,
+                                        color = if (SocietyRepository.isProductionMode) Color(0xFF166534) else SocietyBlueDark
+                                    )
+                                    Text(
+                                        text = if (SocietyRepository.isProductionMode) "تم تصفير البيانات التجريبية بنجاح • جاهز تماماً للعمل الميداني والربط المباشر" else "يمكنك تصفير جميع البيانات التجريبية وبدء العمل على النظام الفعلي فوراً",
+                                        fontSize = 10.sp,
+                                        color = TextMuted
+                                    )
+                                }
+                            }
+
+                            Button(
+                                onClick = { showResetDataConfirmDialog = true },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (SocietyRepository.isProductionMode) Color(0xFF059669) else Color(0xFFDC2626)
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                            ) {
+                                Icon(imageVector = Icons.Default.CleaningServices, contentDescription = null, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = if (SocietyRepository.isProductionMode) "تصفير مجدداً" else "تصفير وبدء العمل الفعلي",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+
+                    // ==========================================
                     // صف KPI أعلى (4 بطاقات)
                     // 1. عدد الحلقات | ايقونة | رابط "عرض الكل"
                     // 2. عدد الطلاب المسجلين
@@ -590,64 +656,12 @@ fun SupervisorDashboardScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        // مخطط تقدم الحفظ الشهري (يمين-في-المحتوى)
-                        Card(
+                        // مخطط تقدم الحفظ وتحليل تصنيف السور (مكية ومدنية)
+                        QuranMemorizationChartSection(
                             modifier = Modifier
                                 .weight(1.3f)
-                                .testTag("progress_chart_card"),
-                            shape = RoundedCornerShape(18.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            border = BorderStroke(1.dp, BorderSubtle),
-                            elevation = CardDefaults.cardElevation(2.dp)
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column {
-                                        Text(
-                                            text = "مخطط تقدم الحفظ الشهري",
-                                            fontSize = 14.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = TextDark
-                                        )
-                                        Text(
-                                            text = "نسبة الإنجاز مقارنة بالخطة المستهدفة",
-                                            fontSize = 11.sp,
-                                            color = TextMuted
-                                        )
-                                    }
-                                    Badge(containerColor = EmeraldLight) {
-                                        Text(
-                                            text = "المستهدف: 90%",
-                                            color = EmeraldDark,
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.padding(4.dp)
-                                        )
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(18.dp))
-
-                                // المخطط البياني بالأعمدة (Bar Chart)
-                                MonthlyProgressChart()
-
-                                Spacer(modifier = Modifier.height(12.dp))
-                                HorizontalDivider(color = BorderSubtle)
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(text = "إجمالي الأجزاء المحفوظة هذا الشهر: 1,420 جزء", fontSize = 11.sp, color = SocietyBluePrimary, fontWeight = FontWeight.SemiBold)
-                                    Text(text = "معدل الحفظ اليومي: 2.4 وجه/طالب", fontSize = 11.sp, color = TextMuted)
-                                }
-                            }
-                        }
+                                .testTag("progress_chart_card")
+                        )
 
                         // جدول سريع / رؤية سريعة (يسار-في-المحتوى): آخر 5 نشاطات
                         Card(
@@ -795,6 +809,59 @@ fun SupervisorDashboardScreen(
                     Spacer(modifier = Modifier.height(32.dp))
                 }
             }
+        }
+
+        // ==========================================
+        // Modal: تصفير البيانات والبدء بالنسخة الحقيقية للنظام
+        // ==========================================
+        if (showResetDataConfirmDialog) {
+            AlertDialog(
+                onDismissRequest = { showResetDataConfirmDialog = false },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.CleaningServices,
+                        contentDescription = null,
+                        tint = StatusError,
+                        modifier = Modifier.size(32.dp)
+                    )
+                },
+                title = {
+                    Text(
+                        text = "تصفير البيانات وبدء النظام الفعلي",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp,
+                        textAlign = TextAlign.Center
+                    )
+                },
+                text = {
+                    Text(
+                        text = "سيتم تصفير وإفراغ كافة بيانات الجمعيات والحلقات والطلاب التجريبية فوراً، وتهيئة بيئة نظيفة 100% لبدء إدخال الحلقات والطلاب والمعلمين الفعليين بدون أي شوائب أو أخطاء برمجية.\n\nهل ترغب في تأكيد التصفير وبدء النسخة الحقيقية؟",
+                        fontSize = 13.sp,
+                        lineHeight = 18.sp,
+                        color = TextDark
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            SocietyRepository.resetAllSocietiesDataClean()
+                            ringsList = emptyList()
+                            activitiesList = emptyList()
+                            showResetDataConfirmDialog = false
+                            systemSnackbarMessage = "تم تصفير جميع البيانات التجريبية بنجاح! النظام الآن في وضع التشغيل الفعلي وخالٍ من الأخطاء."
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = StatusError),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text("تأكيد التصفير وبدء النظام الفعلي")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showResetDataConfirmDialog = false }) {
+                        Text("إلغاء")
+                    }
+                }
+            )
         }
 
         // ==========================================

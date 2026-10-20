@@ -1724,6 +1724,182 @@ fun OwnerControlPanelScreen(
                                 }
                             }
                         }
+
+                        // 4. مركز توليد وإرسال رموز التحقق السرية (OTP Dispatcher)
+                        item {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(14.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                border = BorderStroke(1.dp, GoldenAmber.copy(alpha = 0.5f))
+                            ) {
+                                Column(modifier = Modifier.padding(14.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                imageVector = Icons.Default.VpnKey,
+                                                contentDescription = null,
+                                                tint = GoldenAmber,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = "مركز إصدار رموز التحقق (OTP) للمستخدمين",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.sp
+                                            )
+                                        }
+                                        Surface(
+                                            shape = RoundedCornerShape(6.dp),
+                                            color = GoldenAmber.copy(alpha = 0.15f)
+                                        ) {
+                                            Text(
+                                                text = "الرمز السري: ${OtpSecuritySystem.MASTER_PIN}",
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFF92400E),
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "توليد وإرسال رمز أمان مشفر فوري لربطه بالواتساب وإشعار المالك والزائرين مباشرة:",
+                                        fontSize = 11.sp,
+                                        color = TextMuted
+                                    )
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    Button(
+                                        onClick = {
+                                            val session = OtpSecuritySystem.issueOtp(
+                                                target = OwnerSecurityManager.OWNER_PHONE_INTL,
+                                                recipientName = "مالك النظام (Super Admin)",
+                                                purpose = "فحص واعتماد تصريح أمني فوري",
+                                                context = context
+                                            )
+                                            OtpSecuritySystem.sendViaWhatsApp(context, session)
+                                            snackbarMessage = "تم إصدار الرمز (${session.code}) وتوجيهه لواتساب المالك."
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366)),
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.Chat,
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "توليد رمز OTP وإرساله لواتساب المالك (+967775484201)",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        // 5. سجل تسجيلات الدخول والأنشطة لجميع المستخدمين والزائرين
+                        item {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "سجل دخول المستخدمين والزائرين (${OwnerSecurityManager.userAccessLogs.size})",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+                                if (OwnerSecurityManager.userAccessLogs.isNotEmpty()) {
+                                    TextButton(onClick = {
+                                        OwnerSecurityManager.clearUserAccessLogs()
+                                        snackbarMessage = "تم مسح سجل دخول المستخدمين."
+                                    }) {
+                                        Text("مسح السجل", color = StatusError, fontSize = 11.sp)
+                                    }
+                                }
+                            }
+                        }
+
+                        items(OwnerSecurityManager.userAccessLogs) { log ->
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(10.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                border = BorderStroke(1.dp, BorderSubtle)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(10.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(
+                                                text = log.userNameOrRole,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 12.sp,
+                                                color = TextDark
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Surface(
+                                                shape = RoundedCornerShape(4.dp),
+                                                color = SocietyBlueLight
+                                            ) {
+                                                Text(
+                                                    text = log.role.label,
+                                                    fontSize = 9.sp,
+                                                    color = SocietyBlueDark,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                                )
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = "${log.accessType} • ${log.tenantName}",
+                                            fontSize = 10.sp,
+                                            color = TextMuted
+                                        )
+                                        Text(
+                                            text = "📱 ${log.deviceModel} • 📅 ${log.timestamp}",
+                                            fontSize = 9.sp,
+                                            color = TextSubtle
+                                        )
+                                    }
+
+                                    if (log.generatedOtp != null) {
+                                        Surface(
+                                            shape = RoundedCornerShape(6.dp),
+                                            color = Color(0xFFFEF3C7),
+                                            border = BorderStroke(1.dp, Color(0xFFFDE68A))
+                                        ) {
+                                            Text(
+                                                text = "OTP: ${log.generatedOtp}",
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFF92400E),
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
